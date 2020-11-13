@@ -1,4 +1,4 @@
-package com.payline.payment.amazonv2.util;
+package com.payline.payment.amazonv2.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -10,7 +10,6 @@ public class JsonService {
     // --- Singleton Holder pattern + initialization BEGIN
     private JsonService() {
         gson = new GsonBuilder()
-                .setDateFormat("yyyyMMdd'T'HHmmssSS'Z'")    // todo verifier si necessaire et verifier le format
                 .create();
     }
 

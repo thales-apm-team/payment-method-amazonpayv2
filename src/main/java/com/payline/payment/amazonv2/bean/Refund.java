@@ -14,7 +14,7 @@ public class Refund extends AmazonBean {
     private String chargeId;
     private Price refundAmount;
     private String softDescriptor;
-    private StatusDetails statusDetails;    // todo voir si il faut un RefundStatusDetails
+    private StatusDetails statusDetails;
 
     @Builder
     public Refund(Date creationTimestamp, ReleaseEnvironment releaseEnvironment, String refundId, String chargeId, Price refundAmount, String softDescriptor, StatusDetails statusDetails) {
