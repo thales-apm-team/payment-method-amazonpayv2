@@ -25,16 +25,6 @@ class FormUtilsTest {
     @Mock
     SignatureUtils signatureUtils = SignatureUtils.getInstance();
 
-    private final String buttonColor = "Gold";
-    private final String checkoutLanguage = "fr_FR";
-    private final String placement = "Cart";
-    private final String productType = "PayOnly";
-    private final String ledgerCurrency = "EUR";
-    private final String merchantId = "123123";
-    private final String payload = "{\"webCheckoutDetails\":{\"checkoutReviewReturnUrl\":\"https://www.redirection.url.com\"},\"storeId\":\"storeId\"}";
-    private final String publicKeyId = "publicKeyId";
-    private final String signature = "this is a signature";
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -42,21 +32,23 @@ class FormUtilsTest {
 
     @Test
     void createScript() {
+        String payload = "{\"webCheckoutDetails\":{\"checkoutReviewReturnUrl\":\"https://www.redirection.url.com\"},\"storeId\":\"storeId\"}";
+        String signature = "this is a signature";
         Mockito.doReturn(signature).when(signatureUtils).generateSignature(any());
 
         Script script = formUtils.createScript(MockUtils.aPaymentFormConfigurationRequest());
 
         // assertions on script values
-        Assertions.assertEquals(ButtonColor.valueOf(buttonColor), script.getButtonColor());
-        Assertions.assertEquals(checkoutLanguage, script.getCheckoutLanguage());
-        Assertions.assertEquals(ledgerCurrency, script.getLedgerCurrency());
-        Assertions.assertEquals(merchantId, script.getMerchantId());
-        Assertions.assertEquals(Placement.Cart, script.getPlacement());
-        Assertions.assertEquals(ProductType.PayOnly, script.getProductType());
+        Assertions.assertEquals(ButtonColor.GOLD, script.getButtonColor());
+        Assertions.assertEquals("fr_FR", script.getCheckoutLanguage());
+        Assertions.assertEquals("EUR", script.getLedgerCurrency());
+        Assertions.assertEquals("123123", script.getMerchantId());
+        Assertions.assertEquals(Placement.CART, script.getPlacement());
+        Assertions.assertEquals(ProductType.PAYONLY, script.getProductType());
         Assertions.assertTrue(script.isSandbox());
         Assertions.assertEquals(payload, script.getCreateCheckoutSessionConfig().getPayloadJSON());
-        Assertions.assertEquals(publicKeyId, script.getCreateCheckoutSessionConfig().getPublicKeyId());
-        Assertions.assertEquals(signature, script.getCreateCheckoutSessionConfig().getSignature());
+        Assertions.assertEquals("publicKeyId", script.getCreateCheckoutSessionConfig().getPublicKeyId());
+        Assertions.assertEquals("this is a signature", script.getCreateCheckoutSessionConfig().getSignature());
     }
 
     @Test

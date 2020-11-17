@@ -6,7 +6,6 @@ import com.payline.payment.amazonv2.service.LogoPaymentFormConfigurationService;
 import com.payline.payment.amazonv2.utils.JsonService;
 import com.payline.payment.amazonv2.utils.constant.PartnerConfigurationKeys;
 import com.payline.payment.amazonv2.utils.form.FormUtils;
-import com.payline.payment.amazonv2.utils.i18n.I18nService;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.paymentform.bean.form.PartnerWidgetForm;
 import com.payline.pmapi.bean.paymentform.bean.form.partnerwidget.PartnerWidgetOnPay;
@@ -27,7 +26,6 @@ public class PaymentFormConfigurationServiceImpl extends LogoPaymentFormConfigur
     public static final String FAILURE_TRANSACTION_ID = "NO TRANSACTION YET";
 
     private static final Logger LOGGER = LogManager.getLogger(PaymentFormConfigurationServiceImpl.class);
-    private final I18nService i18n = I18nService.getInstance();
     private final JsonService jsonService = JsonService.getInstance();
     private FormUtils formUtils = FormUtils.getInstance();
 
@@ -83,6 +81,7 @@ public class PaymentFormConfigurationServiceImpl extends LogoPaymentFormConfigur
                     .withFailureCause(FailureCause.INVALID_DATA)
                     .build();
         } catch (PluginException e) {
+            LOGGER.info("unable to execute PaymentFormConfigurationServiceImpl#getPaymentFormConfiguration", e);
             pfcResponse = PaymentFormConfigurationResponseFailure.PaymentFormConfigurationResponseFailureBuilder
                     .aPaymentFormConfigurationResponseFailure()
                     .withPartnerTransactionId(FAILURE_TRANSACTION_ID)

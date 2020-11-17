@@ -34,36 +34,27 @@ class PaymentFormConfigurationServiceImplTest {
     @Mock
     FormUtils formUtils;
 
-    private final String buttonColor = "Gold";
-    private final String checkoutLanguage = "fr_FR";
-    private final String placement = "Cart";
-    private final String productType = "PayOnly";
-    private final String ledgerCurrency = "EUR";
-    private final String merchantId = "123123";
-    private final String payload = "{\"webCheckoutDetails\":{\"checkoutReviewReturnUrl\":\"http://redirectionURL.com\"},\"storeId\":\"storeId\"}";
-    private final String publicKeyId = "this is a key";
-    private final String signature = "this is a signature";
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
-
     @Test
     void getPaymentFormConfiguration() throws Exception {
+        String payload = "{\"webCheckoutDetails\":{\"checkoutReviewReturnUrl\":\"http://redirectionURL.com\"},\"storeId\":\"storeId\"}";
+
         Script mockedScript = Script.builder()
                 .createCheckoutSessionConfig(CreateCheckoutSessionConfig.builder()
                         .payloadJSON(payload)
-                        .publicKeyId(publicKeyId)
-                        .signature(signature)
+                        .publicKeyId("this is a key")
+                        .signature("this is a signature")
                         .build())
-                .buttonColor(ButtonColor.valueOf(buttonColor))
-                .placement(Placement.valueOf(placement))
-                .productType(ProductType.valueOf(productType))
-                .checkoutLanguage(checkoutLanguage)
-                .ledgerCurrency(ledgerCurrency)
-                .merchantId(merchantId)
+                .buttonColor(ButtonColor.GOLD)
+                .placement(Placement.CART)
+                .productType(ProductType.PAYONLY)
+                .checkoutLanguage("fr_FR")
+                .ledgerCurrency("EUR")
+                .merchantId("123123")
                 .sandbox(true)
                 .build();
         Mockito.doReturn(mockedScript).when(formUtils).createScript(any());

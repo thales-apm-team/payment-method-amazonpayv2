@@ -1,6 +1,7 @@
 package com.payline.payment.amazonv2.service.impl;
 
 import com.payline.payment.amazonv2.MockUtils;
+import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.nested.Buyer;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
@@ -96,6 +97,10 @@ class PaymentWithRedirectionServiceImplTest {
                 .build();
         Mockito.doReturn(session).when(client).completeCheckoutSession(anyString(), any());
 
+        Charge charge = Charge.builder()
+                .statusDetails(StatusDetails.builder().state("Captured").build()).build();
+        Mockito.doReturn(charge).when(client).createCharge(any());
+
         Map<String, String> requestData = new HashMap<>();
         requestData.put(RequestContextKeys.STEP, RequestContextKeys.STEP_COMPLETE);
         requestData.put(RequestContextKeys.CHECKOUT_SESSION_ID, checkoutSessionId);
@@ -123,7 +128,7 @@ class PaymentWithRedirectionServiceImplTest {
         Assertions.assertEquals(PaymentResponseSuccess.class, response.getClass());
         PaymentResponseSuccess responseSuccess = (PaymentResponseSuccess) response;
 
-        Assertions.assertEquals(chargeId, responseSuccess.getPartnerTransactionId());   // todo confirmer avec la doc?
+        Assertions.assertEquals(chargeId, responseSuccess.getPartnerTransactionId());
         Assertions.assertEquals("Completed", responseSuccess.getStatusCode());
         Assertions.assertEquals(Email.class, responseSuccess.getTransactionDetails().getClass());
         Email email = (Email) responseSuccess.getTransactionDetails();

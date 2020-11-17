@@ -8,7 +8,7 @@ import java.util.Map;
 public class ErrorConverter {
     private final static Map<String, FailureCause> errors = new HashMap<>();
 
-    static {
+    static {// todo ajouter les chargeError?
         // generic errors
         errors.put("InvalidHeaderValue", FailureCause.INVALID_DATA);
         errors.put("InvalidRequest", FailureCause.INVALID_DATA);

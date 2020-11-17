@@ -13,9 +13,16 @@ public class ReasonCodeConverter {
         reasonCodes.put("AmazonCanceled", FailureCause.PAYMENT_PARTNER_ERROR);
         reasonCodes.put("Declined", FailureCause.REFUSED);
         reasonCodes.put("Expired", FailureCause.SESSION_EXPIRED);
-        // refund reason codes
+        reasonCodes.put("ExpiredUnused", FailureCause.SESSION_EXPIRED);
+        reasonCodes.put("MerchantCanceled", FailureCause.CANCEL);
+        reasonCodes.put("SoftDeclined", FailureCause.REFUSED);
+        reasonCodes.put("HardDeclined", FailureCause.REFUSED);
+        reasonCodes.put("TransactionTimedOut", FailureCause.SESSION_EXPIRED);
         reasonCodes.put("AmazonRejected", FailureCause.REFUSED);
         reasonCodes.put("ProcessingFailure", FailureCause.PAYMENT_PARTNER_ERROR);
+    }
+
+    private ReasonCodeConverter() {
     }
 
     /**

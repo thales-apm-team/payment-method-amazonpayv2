@@ -1,8 +1,8 @@
 package com.payline.payment.amazonv2.service.impl;
 
+import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
-import com.payline.payment.amazonv2.bean.nested.Address;
 import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.exception.PluginException;
@@ -10,8 +10,7 @@ import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.amazon.ReasonCodeConverter;
 import com.payline.payment.amazonv2.utils.constant.RequestContextKeys;
-import com.payline.payment.amazonv2.utils.i18n.I18nService;
-import com.payline.pmapi.bean.common.Amount;
+import com.payline.payment.amazonv2.utils.form.FormUtils;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.payment.RequestContext;
 import com.payline.pmapi.bean.payment.request.RedirectionPaymentRequest;
@@ -22,22 +21,18 @@ import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.Email
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
-import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormDisplayFieldText;
-import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormField;
-import com.payline.pmapi.bean.paymentform.bean.form.CustomForm;
-import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConfigurationResponse;
-import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
 import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.PaymentWithRedirectionService;
 import org.apache.logging.log4j.Logger;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirectionService {
     private static final Logger LOGGER = LogManager.getLogger(PaymentWithRedirectionServiceImpl.class);
 
     private ClientUtils client = ClientUtils.getInstance();
-    private final I18nService i18n = I18nService.getInstance();
+    FormUtils formUtils = FormUtils.getInstance();
 
     @Override
     public PaymentResponse finalizeRedirectionPayment(RedirectionPaymentRequest request) {
@@ -58,13 +53,29 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
                         .build();
             }
         } catch (PluginException e) {
+            LOGGER.info("unable to execute PaymentWithRedirectionServiceImpl#finalizeRedirectionPayment", e);
             response = e.toPaymentResponseFailureBuilder().build();
+        } catch (RuntimeException e){
+            LOGGER.error("Unexpected plugin error", e);
+            response = PaymentResponseFailure.PaymentResponseFailureBuilder
+                    .aPaymentResponseFailure()
+                    .withErrorCode(PluginException.runtimeErrorCode(e))
+                    .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }
         return response;
     }
 
     @Override
     public PaymentResponse handleSessionExpired(TransactionStatusRequest transactionStatusRequest) {
+        // voir dans quel process on est (paiement / remboursement)
+        // dans le cas paiement partnerTranasctionId = ChechoutSessionID
+        // dans le cas refund partnerTransactionId = RefundId
+
+        // dans le ca paiement => getChechoutSesion
+        //client.getCheckoutSession()
+
+        // dans le cas refund => getRefund
+        //client.getRefund()
         return null;
     }
 
@@ -90,7 +101,7 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
 
         return PaymentResponseFormUpdated.PaymentResponseFormUpdatedBuilder
                 .aPaymentResponseFormUpdated()
-                .withPaymentFormConfigurationResponse(createForm(session, request))
+                .withPaymentFormConfigurationResponse(formUtils.createPaymentInfoDisplayForm(session, request))
                 .withRequestContext(context)
                 .build();
     }
@@ -113,20 +124,56 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
         client.init(configuration);
         CheckoutSession session = client.completeCheckoutSession(checkoutSessionId, details);
 
+
+        PaymentResponse response;
+        if ("Completed".equalsIgnoreCase(session.getStatusDetails().getState())) {
+            // the payment is authorized
+            response = chargeRequest(request, session, chargeAmount);
+
+        } else {
+            // return a failure Payment response
+            String email = request.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL);
+            BuyerPaymentId transactionDetails = Email.EmailBuilder
+                    .anEmail()
+                    .withEmail(email)
+                    .build();
+            response = PaymentResponseFailure.PaymentResponseFailureBuilder
+                    .aPaymentResponseFailure()
+                    .withPartnerTransactionId(session.getChargeId())
+                    .withErrorCode(session.getStatusDetails().getReasonDescription())
+                    .withFailureCause(ReasonCodeConverter.convert(session.getStatusDetails().getReasonCode()))
+                    .withTransactionDetails(transactionDetails)
+                    .build();
+        }
+
+        return response;
+    }
+
+    public PaymentResponse chargeRequest(RedirectionPaymentRequest request, CheckoutSession session, Price chargeAmount) {
+        PaymentResponse response;
+
+        Charge charge = Charge.builder()
+                .chargePermissionId(session.getChargePermissionId())
+                .chargeAmount(chargeAmount)
+                .captureNow(true)
+                .softDescriptor(request.getSoftDescriptor())
+                .canHandlePendingAuthorization(false)
+                .merchantMetadata(session.getMerchantMetadata())
+                .build();
+
+        charge = client.createCharge(charge);
+
         // return a final Payment response
         String email = request.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL);
         BuyerPaymentId transactionDetails = Email.EmailBuilder
                 .anEmail()
                 .withEmail(email)
                 .build();
-
-        PaymentResponse response;
-        if ("Completed".equalsIgnoreCase(session.getStatusDetails().getState())) {
+        if ("Captured".equals(charge.getStatusDetails().getState())) {
             response = PaymentResponseSuccess.PaymentResponseSuccessBuilder
                     .aPaymentResponseSuccess()
                     .withPartnerTransactionId(session.getChargeId())
                     .withStatusCode(session.getStatusDetails().getState())
-                    .withTransactionAdditionalData(checkoutSessionId)
                     .withTransactionDetails(transactionDetails)
                     .build();
         } else {
@@ -140,89 +187,5 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
         }
 
         return response;
-    }
-
-    private PaymentFormConfigurationResponse createForm(CheckoutSession session, RedirectionPaymentRequest request) {
-        Locale locale = request.getLocale();
-        Amount amount = request.getAmount();
-        List<PaymentFormField> customFields = new ArrayList<>();
-
-        // show buyer email
-        String emailContent = createContent(i18n.getMessage("checkoutConfirmation.email", locale), session.getBuyer().getEmail());
-        PaymentFormDisplayFieldText emailDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
-                .aPaymentFormDisplayFieldText()
-                .withContent(emailContent)
-                .build();
-        customFields.add(emailDisplay);
-
-        // show buyer name
-        String nameContent = createContent(i18n.getMessage("checkoutConfirmation.name", locale), session.getBuyer().getName());
-        PaymentFormDisplayFieldText nameDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
-                .aPaymentFormDisplayFieldText()
-                .withContent(nameContent)
-                .build();
-        customFields.add(nameDisplay);
-
-        // show amount
-        String amountContent = createContent(i18n.getMessage("checkoutConfirmation.amount", locale), PluginUtils.createStringAmountToShow(amount));
-        PaymentFormDisplayFieldText amountDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
-                .aPaymentFormDisplayFieldText()
-                .withContent(amountContent)
-                .build();
-        customFields.add(amountDisplay);
-
-        // show delivery address if present
-        if (session.getShippingAddress() != null) {
-            String shippingAddress = createStringAddress(session.getShippingAddress());
-            String shippingAddressContent = createContent(i18n.getMessage("checkoutConfirmation.shippingAddress", locale), shippingAddress);
-            PaymentFormDisplayFieldText shippingAddressDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
-                    .aPaymentFormDisplayFieldText()
-                    .withContent(shippingAddressContent)
-                    .build();
-            customFields.add(shippingAddressDisplay);
-        }
-
-        // show recurring if present
-        if (session.getRecurringMetaData() != null) {
-            // todo afficher le recurring
-        }
-
-        // return form
-        CustomForm form = CustomForm.builder()
-                .withDescription(i18n.getMessage("checkoutConfirmation.description", locale))
-                .withDisplayButton(true)
-                .withButtonText(i18n.getMessage("checkoutConfirmation.buttonText", locale))
-                .withCustomFields(customFields)
-                .build();
-
-        return PaymentFormConfigurationResponseSpecific.PaymentFormConfigurationResponseSpecificBuilder
-                .aPaymentFormConfigurationResponseSpecific()
-                .withPaymentForm(form)
-                .build();
-    }
-
-
-    private String createContent(String message, String value) {
-        return message + ": " + value;
-    }
-
-    /**
-     * @param address
-     * @return
-     */
-    public static String createStringAddress(Address address) {
-        StringBuilder sb = new StringBuilder(address.getName());
-
-        sb.append(PluginUtils.addIfExist(address.getAddressLine1()));
-        sb.append(PluginUtils.addIfExist(address.getAddressLine2()));
-        sb.append(PluginUtils.addIfExist(address.getAddressLine3()));
-        sb.append(PluginUtils.addIfExist(address.getCity()));
-        sb.append(PluginUtils.addIfExist(address.getDistrict()));
-        sb.append(PluginUtils.addIfExist(address.getStateOrRegion()));
-        sb.append(PluginUtils.addIfExist(address.getPostalCode()));
-        sb.append(PluginUtils.addIfExist(address.getCountryCode()));
-        sb.append(PluginUtils.addIfExist(address.getPhoneNumber()));
-
-        return sb.toString();
     }
 }

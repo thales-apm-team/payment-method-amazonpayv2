@@ -4,6 +4,7 @@ import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
+import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.amazon.ReasonCodeConverter;
@@ -17,7 +18,7 @@ import com.payline.pmapi.service.RefundService;
 import org.apache.logging.log4j.Logger;
 
 public class RefundServiceImpl implements RefundService {
-    private static final Logger LOGGER = LogManager.getLogger(ConfigurationServiceImpl.class);
+    private static final Logger LOGGER = LogManager.getLogger(RefundServiceImpl.class);
 
     private final ClientUtils client = ClientUtils.getInstance();
 
@@ -26,65 +27,60 @@ public class RefundServiceImpl implements RefundService {
         RequestConfiguration configuration = RequestConfiguration.build(request);
         RefundResponse response = null;
 
-        // create Refund object
-        Price refundAmount = Price.builder()
-                .amount(PluginUtils.createStringAmount(request.getAmount()))
-                .currencyCode(request.getAmount().getCurrency().getCurrencyCode())
-                .build();
+        try {
 
-        Refund refund = Refund.builder()
-                .chargeId(request.getPartnerTransactionId())
-                .refundAmount(refundAmount)
-                .softDescriptor(request.getSoftDescriptor())
-                .build();
+            // create Refund object
+            Price refundAmount = Price.builder()
+                    .amount(PluginUtils.createStringAmount(request.getAmount()))
+                    .currencyCode(request.getAmount().getCurrency().getCurrencyCode())
+                    .build();
 
-        // call for a refund creation
-        client.init(configuration);
-        refund = client.createRefund(refund);
-        String refundId = refund.getRefundId();
+            Refund refund = Refund.builder()
+                    .chargeId(request.getPartnerTransactionId())
+                    .refundAmount(refundAmount)
+                    .softDescriptor(request.getSoftDescriptor())
+                    .build();
 
-        // synchronously ask for the refund status until it's a final status
-        int tryCounter = 5; // todo a definir
-        while (tryCounter > 0) {
-            try {
-                wait(1000);// todo a definir
-            } catch (InterruptedException e) {
-                // todo on fait quoi?
-            }
+            // call for a refund creation
+            client.init(configuration);
+            refund = client.createRefund(refund);
+            String refundId = refund.getRefundId();
 
+            // synchronously ask for the refund status until it's a final status
             refund = client.getRefund(refundId);
             StatusDetails details = refund.getStatusDetails();
 
             if ("Refunded".equalsIgnoreCase(details.getState())) {
                 response = RefundResponseSuccess.RefundResponseSuccessBuilder
                         .aRefundResponseSuccess()
-                        .withPartnerTransactionId(refund.getChargeId()) // todo a confirmer (cest ptet le refundId)
+                        .withPartnerTransactionId(refund.getChargeId())
                         .withStatusCode(details.getState())
                         .build();
-                break;
             } else if ("Declined".equalsIgnoreCase(details.getState())) {
                 response = RefundResponseFailure.RefundResponseFailureBuilder
                         .aRefundResponseFailure()
-                        .withPartnerTransactionId("") // todo ajouter documentation
+                        .withPartnerTransactionId(refund.getRefundId())
                         .withErrorCode(details.getReasonDescription())
                         .withFailureCause(ReasonCodeConverter.convert(details.getReasonCode()))
                         .build();
-                break;
             } else {
-                tryCounter--;
+                response = RefundResponseSuccess.RefundResponseSuccessBuilder
+                        .aRefundResponseSuccess()
+                        .withPartnerTransactionId(refund.getRefundId())
+                        .withStatusCode("PENDING")
+                        .build();
             }
-        }
 
-        // verify if final status or end of loop
-        if (response == null) {
-            String errorMessage = "Unable to obtain a final refund status";
-            LOGGER.error(errorMessage);
+        }catch (PluginException e){
+            LOGGER.info("unable to execute RefundService#refundRequest", e);
+            response = e.toRefundResponseFailureBuilder()
+                    .build();
+        }catch (RuntimeException e){
+            LOGGER.error("Unexpected plugin error", e);
             response = RefundResponseFailure.RefundResponseFailureBuilder
                     .aRefundResponseFailure()
-                    .withPartnerTransactionId(request.getPartnerTransactionId())
-                    .withErrorCode(errorMessage)
-                    .withFailureCause(FailureCause.SESSION_EXPIRED)
-                    .build();
+                    .withErrorCode(PluginException.runtimeErrorCode(e))
+                    .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }
 
         return response;

@@ -5,16 +5,28 @@ import com.payline.payment.amazonv2.bean.Script;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.*;
 import com.payline.payment.amazonv2.utils.JsonService;
+import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.SignatureUtils;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.amazonv2.utils.constant.PartnerConfigurationKeys;
+import com.payline.payment.amazonv2.utils.i18n.I18nService;
+import com.payline.pmapi.bean.common.Amount;
+import com.payline.pmapi.bean.payment.request.RedirectionPaymentRequest;
+import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormDisplayFieldText;
+import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormField;
+import com.payline.pmapi.bean.paymentform.bean.form.CustomForm;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationRequest;
+import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConfigurationResponse;
+import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class FormUtils {
     private final JsonService jsonService = JsonService.getInstance();
     private SignatureUtils signature = SignatureUtils.getInstance();
+    private final I18nService i18n = I18nService.getInstance();
 
 
     /**
@@ -65,12 +77,98 @@ public class FormUtils {
                 .ledgerCurrency(request.getAmount().getCurrency().getCurrencyCode())
                 .sandbox(request.getEnvironment().isSandbox())
                 .checkoutLanguage(getLanguage(request.getLocale()))
-                .productType(ProductType.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PRODUCT_TYPE).getValue()))
-                .placement(Placement.valueOf(configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.PLACEMENT)))
-                .buttonColor(ButtonColor.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.BUTTON_COLOR).getValue()))
+                .productType(ProductType.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PRODUCT_TYPE).getValue().toUpperCase()))
+                .placement(Placement.valueOf(configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.PLACEMENT).toUpperCase()))
+                .buttonColor(ButtonColor.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.BUTTON_COLOR).getValue().toUpperCase()))
                 .createCheckoutSessionConfig(sessionConfig)
                 .build();
     }
+
+
+    public PaymentFormConfigurationResponse createPaymentInfoDisplayForm(CheckoutSession session, RedirectionPaymentRequest request) {
+        Locale locale = request.getLocale();
+        Amount amount = request.getAmount();
+        List<PaymentFormField> customFields = new ArrayList<>();
+
+        // show buyer email
+        String emailContent = createContent(i18n.getMessage("checkoutConfirmation.email", locale), session.getBuyer().getEmail());
+        PaymentFormDisplayFieldText emailDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
+                .aPaymentFormDisplayFieldText()
+                .withContent(emailContent)
+                .build();
+        customFields.add(emailDisplay);
+
+        // show buyer name
+        String nameContent = createContent(i18n.getMessage("checkoutConfirmation.name", locale), session.getBuyer().getName());
+        PaymentFormDisplayFieldText nameDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
+                .aPaymentFormDisplayFieldText()
+                .withContent(nameContent)
+                .build();
+        customFields.add(nameDisplay);
+
+        // show amount
+        String amountContent = createContent(i18n.getMessage("checkoutConfirmation.amount", locale), PluginUtils.createStringAmountToShow(amount));
+        PaymentFormDisplayFieldText amountDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
+                .aPaymentFormDisplayFieldText()
+                .withContent(amountContent)
+                .build();
+        customFields.add(amountDisplay);
+
+        // show delivery address if present
+        if (session.getShippingAddress() != null) {
+            String shippingAddress = createStringAddress(session.getShippingAddress());
+            String shippingAddressContent = createContent(i18n.getMessage("checkoutConfirmation.shippingAddress", locale), shippingAddress);
+            PaymentFormDisplayFieldText shippingAddressDisplay = PaymentFormDisplayFieldText.PaymentFormDisplayFieldTextBuilder
+                    .aPaymentFormDisplayFieldText()
+                    .withContent(shippingAddressContent)
+                    .build();
+            customFields.add(shippingAddressDisplay);
+        }
+
+        // show recurring if present
+        if (session.getRecurringMetaData() != null) {
+            // todo afficher le recurring
+        }
+
+        // return form
+        CustomForm form = CustomForm.builder()
+                .withDescription(i18n.getMessage("checkoutConfirmation.description", locale))
+                .withDisplayButton(true)
+                .withButtonText(i18n.getMessage("checkoutConfirmation.buttonText", locale))
+                .withCustomFields(customFields)
+                .build();
+
+        return PaymentFormConfigurationResponseSpecific.PaymentFormConfigurationResponseSpecificBuilder
+                .aPaymentFormConfigurationResponseSpecific()
+                .withPaymentForm(form)
+                .build();
+    }
+
+
+    private String createContent(String message, String value) {
+        return message + ": " + value;
+    }
+
+    /**
+     * @param address
+     * @return
+     */
+    public static String createStringAddress(Address address) {
+        StringBuilder sb = new StringBuilder(address.getName());
+
+        sb.append(PluginUtils.addIfExist(address.getAddressLine1()));
+        sb.append(PluginUtils.addIfExist(address.getAddressLine2()));
+        sb.append(PluginUtils.addIfExist(address.getAddressLine3()));
+        sb.append(PluginUtils.addIfExist(address.getCity()));
+        sb.append(PluginUtils.addIfExist(address.getDistrict()));
+        sb.append(PluginUtils.addIfExist(address.getStateOrRegion()));
+        sb.append(PluginUtils.addIfExist(address.getPostalCode()));
+        sb.append(PluginUtils.addIfExist(address.getCountryCode()));
+        sb.append(PluginUtils.addIfExist(address.getPhoneNumber()));
+
+        return sb.toString();
+    }
+
 
 
     /**

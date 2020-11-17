@@ -14,7 +14,6 @@ targetCompatibility = 1.8
 
 compileJava.options.encoding = 'UTF-8'
 
-
 def externalFileName = "$projectDir/.external"
 if (file(externalFileName).exists()) {
     apply from: "external.gradle"

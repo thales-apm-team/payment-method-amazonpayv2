@@ -29,6 +29,7 @@ import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConf
 import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.refund.response.RefundResponse;
+import com.payline.pmapi.bean.refund.response.impl.RefundResponseSuccess;
 import com.payline.pmapi.service.ConfigurationService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -61,7 +62,8 @@ public class PaymentIT {
     private final PaymentWithRedirectionServiceImpl redirectionService = new PaymentWithRedirectionServiceImpl();
     private final RefundServiceImpl refundService = new RefundServiceImpl();
 
-    private final String templateMail = "jan.florent@mythalesgroup.io";
+    private final String testMail = System.getProperty("project.mail");
+    private final String testPassword = System.getProperty("project.password");
 
     @Test
     void fullPaymentTest() throws Exception {
@@ -86,12 +88,12 @@ public class PaymentIT {
         Assertions.assertNotNull(paymentFormConfigurationResponse);
         String scriptAfterImport = form.getLoadingScriptAfterImport();
         Script script = JsonService.getInstance().fromJson(scriptAfterImport.substring(44, scriptAfterImport.length() - 1), Script.class);
-        Assertions.assertEquals(ButtonColor.Gold, script.getButtonColor());
+        Assertions.assertEquals(ButtonColor.GOLD, script.getButtonColor());
         Assertions.assertEquals("fr_FR", script.getCheckoutLanguage());
         Assertions.assertEquals("EUR", script.getLedgerCurrency());
         Assertions.assertEquals(System.getProperty("project.merchantId"), script.getMerchantId());
-        Assertions.assertEquals(Placement.Cart, script.getPlacement());
-        Assertions.assertEquals(ProductType.PayOnly, script.getProductType());
+        Assertions.assertEquals(Placement.CART, script.getPlacement());
+        Assertions.assertEquals(ProductType.PAYONLY, script.getProductType());
         Assertions.assertTrue(script.isSandbox());
 
         Assertions.assertEquals(new URL("https://static-eu.payments-amazon.com/checkout.js"), form.getScriptImport().getUrl());
@@ -108,7 +110,7 @@ public class PaymentIT {
         Assertions.assertEquals(PaymentResponseFormUpdated.class, redirectionServicePaymentResponse.getClass());
         PaymentResponseFormUpdated responseFormUpdated = (PaymentResponseFormUpdated) redirectionServicePaymentResponse;
 
-        Assertions.assertEquals(templateMail, responseFormUpdated.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL));
+        Assertions.assertEquals(testMail, responseFormUpdated.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL));
 
         Assertions.assertEquals(PaymentFormConfigurationResponseSpecific.class, responseFormUpdated.getPaymentFormConfigurationResponse().getClass());
         PaymentFormConfigurationResponseSpecific redirectionResponseSpecific = (PaymentFormConfigurationResponseSpecific) responseFormUpdated.getPaymentFormConfigurationResponse();
@@ -119,7 +121,7 @@ public class PaymentIT {
         Assertions.assertEquals("Confirmer", customForm.getButtonText());
 
         Assertions.assertEquals(3, customForm.getCustomFields().size());
-        Assertions.assertEquals("Email: " + templateMail, ((PaymentFormDisplayFieldText) customForm.getCustomFields().get(0)).getContent());
+        Assertions.assertEquals("Email: " + testMail, ((PaymentFormDisplayFieldText) customForm.getCustomFields().get(0)).getContent());
         Assertions.assertEquals("Nom: APM", ((PaymentFormDisplayFieldText) customForm.getCustomFields().get(1)).getContent());
         Assertions.assertEquals("Montant: 10.00€", ((PaymentFormDisplayFieldText) customForm.getCustomFields().get(2)).getContent());
 
@@ -152,17 +154,23 @@ public class PaymentIT {
 
         PaymentResponseSuccess responseSuccess = (PaymentResponseSuccess) redirectionServicePaymentResponse2;
         Assertions.assertEquals("Completed", responseSuccess.getStatusCode());
-        Assertions.assertEquals(checkoutSessionId2, responseSuccess.getPartnerTransactionId());
+        Assertions.assertNotNull(responseSuccess.getPartnerTransactionId());
+        Assertions.assertNotEquals(checkoutSessionId2, responseSuccess.getPartnerTransactionId());
         Assertions.assertEquals(Email.class, responseSuccess.getTransactionDetails().getClass());
         Email email = (Email) responseSuccess.getTransactionDetails();
-        Assertions.assertEquals(templateMail, email);
+        Assertions.assertEquals(testMail, email.getEmail());
 
 
         // refund service call
-        RefundRequest refundRequest = null;
+        RefundRequest refundRequest = createRefundRequest(responseSuccess.getPartnerTransactionId(), responseFormUpdated.getRequestContext());
         RefundResponse refundResponse = refundService.refundRequest(refundRequest);
 
         // Assertions on refund response;
+        Assertions.assertNotNull(refundResponse);
+        Assertions.assertEquals(RefundResponseSuccess.class, refundResponse.getClass());
+        RefundResponseSuccess refundResponseSuccess = (RefundResponseSuccess) refundResponse;
+        Assertions.assertEquals("", refundResponseSuccess.getPartnerTransactionId());
+        Assertions.assertEquals("", refundResponseSuccess.getStatusCode());
 
     }
 
@@ -194,15 +202,7 @@ public class PaymentIT {
 
             // login proccess
             driver.findElement(By.id("AmazonPayButton")).click();
-
-            // id ap_email
-            driver.findElement(By.id("ap_email")).sendKeys(templateMail);
-
-            // id ap_password
-            driver.findElement(By.id("ap_password")).sendKeys("Payline2020!");
-
-            // signInSubmit
-            driver.findElement(By.id("signInSubmit")).click();
+            login(driver);
 
             WebDriverWait wait = new WebDriverWait(driver, 30);
             wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("a-autoid-0-announce")));
@@ -230,16 +230,7 @@ public class PaymentIT {
 
         try {
             driver.get(url.toString());
-
-            // id ap_email// todo factoriser
-            driver.findElement(By.id("ap_email")).sendKeys(templateMail);
-
-            // id ap_password
-            driver.findElement(By.id("ap_password")).sendKeys("Payline2020!");
-
-            // signInSubmit
-            driver.findElement(By.id("signInSubmit")).click();
-
+            login(driver);
             WebDriverWait wait = new WebDriverWait(driver, 30);
 
             wait.until(ExpectedConditions.urlContains("https://www.redirection.url.com"));
@@ -249,6 +240,12 @@ public class PaymentIT {
         }
         return amazonPayCheckoutSessionId;
     }
+    
+    private void login(WebDriver driver){
+        driver.findElement(By.id("ap_email")).sendKeys(testMail);
+        driver.findElement(By.id("ap_password")).sendKeys(testPassword);
+        driver.findElement(By.id("signInSubmit")).click();
+    }
 
     private ContractConfiguration createContractConfiguration() {
         Map<String, ContractProperty> contractProperties = new HashMap<>();
@@ -256,8 +253,8 @@ public class PaymentIT {
         contractProperties.put(ContractConfigurationKeys.MERCHANT_NAME, new ContractProperty(System.getProperty("project.merchantName")));
         contractProperties.put(ContractConfigurationKeys.STORE_ID, new ContractProperty(System.getProperty("project.storeId")));
         contractProperties.put(ContractConfigurationKeys.PUBLIC_KEY_ID, new ContractProperty(System.getProperty("project.publicKeyId")));
-        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.Gold.name()));
-        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PayOnly.name()));
+        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.GOLD.getColor()));
+        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PAYANDSHIP.getType()));
 
         return new ContractConfiguration("AmazonPayV2", contractProperties);
     }
@@ -265,7 +262,7 @@ public class PaymentIT {
     private PartnerConfiguration createPartnerConfiguration() throws Exception {
         Map<String, String> partnerConfigurationMap = new HashMap<>();
         partnerConfigurationMap.put(AMAZON_SCRIPT_URL, "https://static-eu.payments-amazon.com/checkout.js");
-        partnerConfigurationMap.put(PLACEMENT, Placement.Cart.name());
+        partnerConfigurationMap.put(PLACEMENT, Placement.CART.getPlace());
         Map<String, String> sensitivePartnerConfigurationMap = new HashMap<>();
         sensitivePartnerConfigurationMap.put(PRIVATE_KEY, new String(Files.readAllBytes(Paths.get(System.getProperty("project.privateKey")))));
 
@@ -327,6 +324,21 @@ public class PaymentIT {
                 .withAmount(MockUtils.aPaylineAmount())
                 .withBuyer(MockUtils.aBuyer())
                 .withBrowser(MockUtils.aBrowser())
+                .build();
+    }
+
+    private RefundRequest createRefundRequest(String partnerTransactionId,RequestContext context) throws Exception {
+        return RefundRequest.RefundRequestBuilder
+                .aRefundRequest()
+                .withTransactionId("12345")
+                .withPartnerTransactionId(partnerTransactionId)
+                .withRequestContext(context)
+                .withContractConfiguration(createContractConfiguration())
+                .withPartnerConfiguration(createPartnerConfiguration())
+                .withEnvironment(MockUtils.anEnvironment())
+                .withOrder(MockUtils.aPaylineOrder())
+                .withAmount(MockUtils.aPaylineAmount())
+                .withBuyer(MockUtils.aBuyer())
                 .build();
     }
 }

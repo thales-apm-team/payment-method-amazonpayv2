@@ -22,7 +22,7 @@ public class SignatureUtils extends ConfigurationUtils {
         return Holder.instance;
     }
 
-
+    @Override
     public void init(RequestConfiguration configuration) {
         try {
             super.init(configuration);

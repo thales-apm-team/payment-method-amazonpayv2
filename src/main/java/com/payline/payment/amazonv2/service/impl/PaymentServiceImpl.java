@@ -50,9 +50,10 @@ public class PaymentServiceImpl implements PaymentService {
             paymentResponse = createPaymentResponseFromCheckoutSession(checkoutSession);
 
         } catch (PluginException e) {
+            LOGGER.info("unable to execute PaymentService#paymentRequest", e);
             paymentResponse = e.toPaymentResponseFailureBuilder().withPartnerTransactionId(checkoutSessionId).build();
         } catch (RuntimeException e){
-            // todo log
+            LOGGER.error("Unexpected plugin error", e);
             paymentResponse = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
                     .withErrorCode(PluginException.runtimeErrorCode(e))
