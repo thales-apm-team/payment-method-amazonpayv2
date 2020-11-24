@@ -77,9 +77,9 @@ public class FormUtils {
                 .ledgerCurrency(request.getAmount().getCurrency().getCurrencyCode())
                 .sandbox(request.getEnvironment().isSandbox())
                 .checkoutLanguage(getLanguage(request.getLocale()))
-                .productType(ProductType.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PRODUCT_TYPE).getValue().toUpperCase()))
-                .placement(Placement.valueOf(configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.PLACEMENT).toUpperCase()))
-                .buttonColor(ButtonColor.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.BUTTON_COLOR).getValue().toUpperCase()))
+                .productType(ProductType.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.PRODUCT_TYPE).getValue()))
+                .placement(Placement.valueOf(configuration.getPartnerConfiguration().getProperty(PartnerConfigurationKeys.PLACEMENT)))
+                .buttonColor(ButtonColor.valueOf(configuration.getContractConfiguration().getProperty(ContractConfigurationKeys.BUTTON_COLOR).getValue()))
                 .createCheckoutSessionConfig(sessionConfig)
                 .build();
     }

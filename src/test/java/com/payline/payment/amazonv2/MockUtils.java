@@ -40,7 +40,7 @@ public class MockUtils {
     public static PartnerConfiguration aPartnerConfiguration() {
         Map<String, String> partnerConfigurationMap = new HashMap<>();
         partnerConfigurationMap.put(PartnerConfigurationKeys.AMAZON_SCRIPT_URL, "https://static-eu.payments-amazon.com/checkout.js");
-        partnerConfigurationMap.put(PartnerConfigurationKeys.PLACEMENT, Placement.CART.getPlace());
+        partnerConfigurationMap.put(PartnerConfigurationKeys.PLACEMENT, Placement.Cart.name());
 
         Map<String, String> sensitiveConfigurationMap = new HashMap<>();
         sensitiveConfigurationMap.put(PartnerConfigurationKeys.PRIVATE_KEY, "-----BEGIN PRIVATE KEY-----\n" +
@@ -264,8 +264,8 @@ public class MockUtils {
         contractProperties.put(ContractConfigurationKeys.MERCHANT_NAME, new ContractProperty("merchantName"));
         contractProperties.put(ContractConfigurationKeys.STORE_ID, new ContractProperty("storeId"));
         contractProperties.put(ContractConfigurationKeys.PUBLIC_KEY_ID, new ContractProperty("publicKeyId"));
-        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.GOLD.getColor()));
-        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PAYONLY.getType()));
+        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.Gold.name()));
+        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PayOnly.name()));
 
         return new ContractConfiguration("AmazonPayV2", contractProperties);
     }

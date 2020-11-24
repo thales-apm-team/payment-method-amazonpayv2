@@ -88,12 +88,12 @@ public class PaymentIT {
         Assertions.assertNotNull(paymentFormConfigurationResponse);
         String scriptAfterImport = form.getLoadingScriptAfterImport();
         Script script = JsonService.getInstance().fromJson(scriptAfterImport.substring(44, scriptAfterImport.length() - 1), Script.class);
-        Assertions.assertEquals(ButtonColor.GOLD, script.getButtonColor());
+        Assertions.assertEquals(ButtonColor.Gold, script.getButtonColor());
         Assertions.assertEquals("fr_FR", script.getCheckoutLanguage());
         Assertions.assertEquals("EUR", script.getLedgerCurrency());
         Assertions.assertEquals(System.getProperty("project.merchantId"), script.getMerchantId());
-        Assertions.assertEquals(Placement.CART, script.getPlacement());
-        Assertions.assertEquals(ProductType.PAYONLY, script.getProductType());
+        Assertions.assertEquals(Placement.Cart, script.getPlacement());
+        Assertions.assertEquals(ProductType.PayOnly, script.getProductType());
         Assertions.assertTrue(script.isSandbox());
 
         Assertions.assertEquals(new URL("https://static-eu.payments-amazon.com/checkout.js"), form.getScriptImport().getUrl());
@@ -253,8 +253,8 @@ public class PaymentIT {
         contractProperties.put(ContractConfigurationKeys.MERCHANT_NAME, new ContractProperty(System.getProperty("project.merchantName")));
         contractProperties.put(ContractConfigurationKeys.STORE_ID, new ContractProperty(System.getProperty("project.storeId")));
         contractProperties.put(ContractConfigurationKeys.PUBLIC_KEY_ID, new ContractProperty(System.getProperty("project.publicKeyId")));
-        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.GOLD.getColor()));
-        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PAYANDSHIP.getType()));
+        contractProperties.put(ContractConfigurationKeys.BUTTON_COLOR, new ContractProperty(ButtonColor.Gold.name()));
+        contractProperties.put(ContractConfigurationKeys.PRODUCT_TYPE, new ContractProperty(ProductType.PayOnly.name()));
 
         return new ContractConfiguration("AmazonPayV2", contractProperties);
     }
@@ -262,7 +262,7 @@ public class PaymentIT {
     private PartnerConfiguration createPartnerConfiguration() throws Exception {
         Map<String, String> partnerConfigurationMap = new HashMap<>();
         partnerConfigurationMap.put(AMAZON_SCRIPT_URL, "https://static-eu.payments-amazon.com/checkout.js");
-        partnerConfigurationMap.put(PLACEMENT, Placement.CART.getPlace());
+        partnerConfigurationMap.put(PLACEMENT, Placement.Cart.name());
         Map<String, String> sensitivePartnerConfigurationMap = new HashMap<>();
         sensitivePartnerConfigurationMap.put(PRIVATE_KEY, new String(Files.readAllBytes(Paths.get(System.getProperty("project.privateKey")))));
 

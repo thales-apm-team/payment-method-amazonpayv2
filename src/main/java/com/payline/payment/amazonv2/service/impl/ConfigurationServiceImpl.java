@@ -51,16 +51,16 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
         // button color
         Map<String, String> colors = new HashMap<>();
-        colors.put(ButtonColor.GOLD.getColor(), i18n.getMessage("color.gold", locale));
-        colors.put(ButtonColor.LIGHTGRAY.getColor(), i18n.getMessage("color.lightGray", locale));
-        colors.put(ButtonColor.DARKGRAY.getColor(), i18n.getMessage("color.darkGray", locale));
-        parameters.add(this.newListBoxParameter(ContractConfigurationKeys.BUTTON_COLOR, colors, ButtonColor.GOLD.getColor(), true, locale));
+        colors.put(ButtonColor.Gold.name(), i18n.getMessage("color.gold", locale));
+        colors.put(ButtonColor.LightGray.name(), i18n.getMessage("color.lightGray", locale));
+        colors.put(ButtonColor.DarkGray.name(), i18n.getMessage("color.darkGray", locale));
+        parameters.add(this.newListBoxParameter(ContractConfigurationKeys.BUTTON_COLOR, colors, ButtonColor.Gold.name(), true, locale));
 
         // product types
         Map<String, String> productTypes = new HashMap<>();
-        productTypes.put(ProductType.PAYONLY.getType(), i18n.getMessage("productType.payOnly", locale));
-        productTypes.put(ProductType.PAYANDSHIP.getType(), i18n.getMessage("productType.payAndShip", locale));
-        parameters.add(this.newListBoxParameter(ContractConfigurationKeys.PRODUCT_TYPE, productTypes, ProductType.PAYONLY.getType(), true, locale));
+        productTypes.put(ProductType.PayOnly.name(), i18n.getMessage("productType.payOnly", locale));
+        productTypes.put(ProductType.PayAndShip.name(), i18n.getMessage("productType.payAndShip", locale));
+        parameters.add(this.newListBoxParameter(ContractConfigurationKeys.PRODUCT_TYPE, productTypes, ProductType.PayOnly.name(), true, locale));
 
         return parameters;
     }

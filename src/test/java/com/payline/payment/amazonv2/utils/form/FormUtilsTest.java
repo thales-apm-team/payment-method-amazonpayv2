@@ -39,12 +39,12 @@ class FormUtilsTest {
         Script script = formUtils.createScript(MockUtils.aPaymentFormConfigurationRequest());
 
         // assertions on script values
-        Assertions.assertEquals(ButtonColor.GOLD, script.getButtonColor());
+        Assertions.assertEquals(ButtonColor.Gold, script.getButtonColor());
         Assertions.assertEquals("fr_FR", script.getCheckoutLanguage());
         Assertions.assertEquals("EUR", script.getLedgerCurrency());
         Assertions.assertEquals("123123", script.getMerchantId());
-        Assertions.assertEquals(Placement.CART, script.getPlacement());
-        Assertions.assertEquals(ProductType.PAYONLY, script.getProductType());
+        Assertions.assertEquals(Placement.Cart, script.getPlacement());
+        Assertions.assertEquals(ProductType.PayOnly, script.getProductType());
         Assertions.assertTrue(script.isSandbox());
         Assertions.assertEquals(payload, script.getCreateCheckoutSessionConfig().getPayloadJSON());
         Assertions.assertEquals("publicKeyId", script.getCreateCheckoutSessionConfig().getPublicKeyId());
