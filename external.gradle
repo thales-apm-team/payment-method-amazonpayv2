@@ -1,0 +1,63 @@
+repositories {
+    mavenCentral()
+    mavenLocal()
+    maven {
+        url "http://192.168.4.78:8081/repository/maven-releases"
+    }
+    maven {
+        url "http://192.168.4.78:8081/repository/maven-mixed"
+    }
+}
+
+tasks.compileJava.dependsOn("generateMetaInf")
+task generateMetaInf {
+    doLast {
+        File srcDir = file("${projectDir}/src/main/resources/META-INF/services")
+        mkdir srcDir;
+        project.delete(files(srcDir.listFiles()));
+
+        FileTree tree = fileTree('src/main').include('**/service/impl/*')
+        if (tree.isEmpty()) {
+            tree = fileTree('src/main').include('**/service/*')
+        }
+
+        String _package = "";
+        tree.each { File file ->
+            Map<String, String> imports = new HashMap<>();
+            def _classname = "";
+            file.eachLine { line ->
+                // check if the line contains your data
+
+                if (line.contains('package')) {
+                    _package = line.trim().split()[1].replace(';', '.');
+                }
+
+                if (line.contains('import') && line.contains('com.payline.pmapi.service')) {
+                    def _import = line.trim().split()[1].replace(';', '');
+                    String[] wrds = _import.split("\\.");
+                    def key = wrds[wrds.length - 1];
+                    imports.put(key, _import)
+
+                }
+
+                if (line.contains('class') && line.contains('implements')) {
+                    _classname = file.getName().replace(".java", "");
+                    String implementedClasses = line.trim().split("implements")[1];
+                    implementedClasses.replace(",", " ").trim();
+                    String[] implementedClasse = implementedClasses.split();
+                    for (int i = 0; i < implementedClasse.length; i++) {
+                        if (imports.containsKey(implementedClasse[i])) {
+                            def metafile = new File(srcDir.getPath() + '/' + imports.get(implementedClasse[i]));
+                            metafile.write(_package + _classname);
+                        }
+                    }
+
+                }
+
+            }
+            def configMetafile = new File(srcDir.getPath() + '/com.payline.pmapi.service.PaymentFormConfigurationService')
+            configMetafile.write(_package + 'PaymentFormConfigurationServiceImpl');
+
+        }
+    }
+}

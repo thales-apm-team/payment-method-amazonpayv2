@@ -1,0 +1,86 @@
+repositories {
+    mavenLocal()
+    maven {
+        url nexusGroupsUrl
+        credentials {
+            username mavenUser
+            password mavenPassword
+        }
+    }
+    maven {
+        url nexusSnapshotUrl
+        credentials {
+            username mavenUser
+            password mavenPassword
+        }
+    }
+}
+
+ext {
+    releaseDirectoryPath = 'D:/build'
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) { publication ->
+            project.shadow.component(publication)
+
+            // For release only
+            //if (!project.version.contains('-')) {
+            //    artifact testJar
+            //}
+        }
+    }
+    repositories {
+        maven {
+            if (project.version.endsWith('-SNAPSHOT')) {
+                url nexusSnapshotUrl
+            } else {
+                url nexusPublicUrl
+            }
+            credentials {
+                username mavenUser
+                password mavenPassword
+            }
+        }
+    }
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+plugins.withType(JacocoPlugin) {
+    tasks["test"].finalizedBy 'jacocoTestReport'
+}
+
+sonarqube {
+    properties {
+        property "sonar.coverage.jacoco.xmlReportPaths", "${project.buildDir}/reports/jacoco/test/jacocoTestReport.xml"
+        property "sonar.dependencyCheck.reportPath", "${project.buildDir}/reports/dependency-check-report.xml"
+        property 'sonar.dependencyCheck.htmlReportPath', "${project.buildDir}/reports/dependency-check-report.html"
+    }
+}
+
+task buildToLocal(type: Copy) {
+    dependsOn shadowJar
+    from shadowJar
+    into "${releaseDirectoryPath}"
+}
+
+task printVersion {
+    doLast {
+        println version
+    }
+}
+
+
+// To create a JAR including test classes and dependencies
+//task testJar(type: com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar) {
+//    dependsOn 'shadowJar', 'testClasses'
+//    classifier = 'tests'
+//    from sourceSets.test.output.classesDirs + shadowJar
+//    configurations = [project.configurations.fatJarTest]
+//}
