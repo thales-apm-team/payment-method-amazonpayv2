@@ -7,9 +7,4 @@ public class InvalidDataException extends PluginException {
     public InvalidDataException(String message) {
         super(message, FailureCause.INVALID_DATA);
     }
-
-    public InvalidDataException(String message, Exception cause) {
-        super(message, FailureCause.INVALID_DATA, cause);
-    }
-
 }

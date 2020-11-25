@@ -47,3 +47,9 @@ test {
     useJUnitPlatform()
     exclude('**/*IT.class')
 }
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}

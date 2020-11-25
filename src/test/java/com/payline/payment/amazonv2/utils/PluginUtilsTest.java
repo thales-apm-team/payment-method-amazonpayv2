@@ -8,12 +8,22 @@ import org.junit.jupiter.api.Test;
 import java.math.BigInteger;
 import java.util.Currency;
 
-public class PluginUtilsTest {
+class PluginUtilsTest {
 
-    public void testTruncate() {
+    @Test
+    void truncate() {
+        Assertions.assertEquals(null, PluginUtils.truncate(null, 10));
+        Assertions.assertEquals("", PluginUtils.truncate("message", 0));
+        Assertions.assertEquals("this is a ", PluginUtils.truncate("this is a long message", 10));
+        Assertions.assertEquals("foo", PluginUtils.truncate("foo", 10));
     }
 
-    public void testIsEmpty() {
+    @Test
+    void isEmpty() {
+        Assertions.assertTrue(PluginUtils.isEmpty(null));
+        Assertions.assertTrue(PluginUtils.isEmpty(""));
+        Assertions.assertTrue(PluginUtils.isEmpty(" "));
+        Assertions.assertFalse(PluginUtils.isEmpty("foo"));
     }
 
     @Test

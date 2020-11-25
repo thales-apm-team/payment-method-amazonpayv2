@@ -6,9 +6,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ErrorConverter {
-    private final static Map<String, FailureCause> errors = new HashMap<>();
+    private static final Map<String, FailureCause> errors = new HashMap<>();
 
-    static {// todo ajouter les chargeError?
+    private ErrorConverter() {
+    }
+
+    static {
         // generic errors
         errors.put("InvalidHeaderValue", FailureCause.INVALID_DATA);
         errors.put("InvalidRequest", FailureCause.INVALID_DATA);
@@ -55,6 +58,7 @@ public class ErrorConverter {
 
         // Create Refund errors
         errors.put("TransactionAmountExceeded", FailureCause.INVALID_DATA);
+
         errors.put("TransactionCountExceeded", FailureCause.REFUSED);
     }
 

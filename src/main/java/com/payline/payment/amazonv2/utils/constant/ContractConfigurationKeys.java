@@ -1,8 +1,9 @@
 package com.payline.payment.amazonv2.utils.constant;
 
+import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class ContractConfigurationKeys {
     public static final String MERCHANT_NAME = "merchantName";
     public static final String MERCHANT_ID = "merchantId";

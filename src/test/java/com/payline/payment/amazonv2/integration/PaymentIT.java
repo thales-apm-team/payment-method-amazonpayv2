@@ -53,7 +53,7 @@ import static com.payline.payment.amazonv2.utils.constant.PartnerConfigurationKe
 import static com.payline.pmapi.bean.payment.response.impl.PaymentResponseRedirect.RedirectionRequest.RequestType.GET;
 
 
-public class PaymentIT {
+class PaymentIT {
 
     private final ConfigurationService configurationService = new ConfigurationServiceImpl();
 
@@ -169,8 +169,8 @@ public class PaymentIT {
         Assertions.assertNotNull(refundResponse);
         Assertions.assertEquals(RefundResponseSuccess.class, refundResponse.getClass());
         RefundResponseSuccess refundResponseSuccess = (RefundResponseSuccess) refundResponse;
-        Assertions.assertEquals("", refundResponseSuccess.getPartnerTransactionId());
-        Assertions.assertEquals("", refundResponseSuccess.getStatusCode());
+        Assertions.assertTrue(refundResponseSuccess.getPartnerTransactionId().startsWith("S"));
+        Assertions.assertEquals("PENDING", refundResponseSuccess.getStatusCode());
 
     }
 
@@ -315,6 +315,7 @@ public class PaymentIT {
     private PaymentRequest createPaymentRequest(RequestContext context) throws Exception {
         return PaymentRequest.builder()
                 .withTransactionId("123456")
+                .withCaptureNow(true)
                 .withRequestContext(context)
                 .withContractConfiguration(createContractConfiguration())
                 .withPartnerConfiguration(createPartnerConfiguration())

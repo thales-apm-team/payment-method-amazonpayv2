@@ -10,6 +10,7 @@ import com.payline.pmapi.bean.configuration.PartnerConfiguration;
 import com.payline.pmapi.bean.configuration.request.ContractParametersCheckRequest;
 import com.payline.pmapi.bean.payment.*;
 import com.payline.pmapi.bean.payment.request.PaymentRequest;
+import com.payline.pmapi.bean.payment.request.TransactionStatusRequest;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationRequest;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormLogoRequest;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
@@ -229,6 +230,23 @@ public class MockUtils {
                 .withTransactionId(TRANSACTIONID)
                 .withPartnerTransactionId(PARTNER_TRANSACTIONID)
                 .withPartnerConfiguration(aPartnerConfiguration());
+    }
+
+    public static TransactionStatusRequest.TransactionStatusRequestBuilder aPaylineTransactionStatusRequestBuilder(){
+        return TransactionStatusRequest.TransactionStatusRequestBuilder
+                .aNotificationRequest()
+                .withTransactionId(TRANSACTIONID)
+                .withContractConfiguration(aContractConfiguration())
+                .withEnvironment(anEnvironment())
+                .withPartnerConfiguration(aPartnerConfiguration())
+                .withAmount(aPaylineAmount())
+                .withBuyer(aBuyer())
+                .withOrder(aPaylineOrder());
+
+    }
+
+    public static TransactionStatusRequest aPaylineTransactionStatusRequest(){
+        return aPaylineTransactionStatusRequestBuilder().build();
     }
 
 

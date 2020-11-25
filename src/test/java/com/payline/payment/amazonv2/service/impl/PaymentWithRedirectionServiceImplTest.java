@@ -1,14 +1,15 @@
 package com.payline.payment.amazonv2.service.impl;
 
 import com.payline.payment.amazonv2.MockUtils;
-import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
+import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.nested.Buyer;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.constant.RequestContextKeys;
 import com.payline.pmapi.bean.payment.RequestContext;
 import com.payline.pmapi.bean.payment.request.RedirectionPaymentRequest;
+import com.payline.pmapi.bean.payment.request.TransactionStatusRequest;
 import com.payline.pmapi.bean.payment.response.PaymentResponse;
 import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.Email;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
@@ -16,6 +17,9 @@ import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
 import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormDisplayFieldText;
 import com.payline.pmapi.bean.paymentform.bean.form.CustomForm;
 import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
+import com.payline.pmapi.bean.refund.request.RefundRequest;
+import com.payline.pmapi.bean.refund.response.RefundResponse;
+import com.payline.pmapi.bean.refund.response.impl.RefundResponseSuccess;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,8 +32,7 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 
 
 class PaymentWithRedirectionServiceImplTest {
@@ -40,7 +43,7 @@ class PaymentWithRedirectionServiceImplTest {
     ClientUtils client;
 
     private final String checkoutSessionId = "123321";
-    private final String chargeId = "1111111111";
+    private final String chargeId = "C01111111111";
 
     @BeforeEach
     void setup() {
@@ -97,10 +100,6 @@ class PaymentWithRedirectionServiceImplTest {
                 .build();
         Mockito.doReturn(session).when(client).completeCheckoutSession(anyString(), any());
 
-        Charge charge = Charge.builder()
-                .statusDetails(StatusDetails.builder().state("Captured").build()).build();
-        Mockito.doReturn(charge).when(client).createCharge(any());
-
         Map<String, String> requestData = new HashMap<>();
         requestData.put(RequestContextKeys.STEP, RequestContextKeys.STEP_COMPLETE);
         requestData.put(RequestContextKeys.CHECKOUT_SESSION_ID, checkoutSessionId);
@@ -138,6 +137,53 @@ class PaymentWithRedirectionServiceImplTest {
     }
 
     @Test
-    void handleSessionExpired() {
+    void handleSessionExpiredPaymentNominal() {
+        String transactionId = "123456789";
+        TransactionStatusRequest request = MockUtils.aPaylineTransactionStatusRequestBuilder()
+                .withTransactionId(transactionId)
+                .build();
+
+        CheckoutSession session = CheckoutSession.builder()
+                .buyer(Buyer.builder().email("foo@bar.baz").name("Foo").build())
+                .chargeId(chargeId)
+                .statusDetails(StatusDetails.builder().state("Completed").build())
+                .build();
+        Mockito.doReturn(session).when(client).getCheckoutSession(any());
+        PaymentResponse response = service.handleSessionExpired(request);
+
+        Assertions.assertEquals(PaymentResponseSuccess.class, response.getClass());
+        PaymentResponseSuccess responseSuccess = (PaymentResponseSuccess) response;
+        Assertions.assertEquals("Completed", responseSuccess.getStatusCode());
+        Assertions.assertEquals(Email.class, responseSuccess.getTransactionDetails().getClass());
+        Email email = (Email) responseSuccess.getTransactionDetails();
+
+        Assertions.assertEquals("foo@bar.baz", email.getEmail());
+        Mockito.verify(client, Mockito.atLeastOnce()).getCheckoutSession(eq(transactionId));
+        Mockito.verify(client, Mockito.never()).getRefund(any());
+    }
+
+
+    @Test
+    void handleSessionExpiredRefundNominal() {
+        String transactionId = "S02123456789";
+        Refund refund = Refund.builder()
+                .refundId(transactionId)
+                .chargeId(transactionId)
+                .statusDetails(StatusDetails.builder().state("Refunded").build())
+                .build();
+        Mockito.doReturn(refund).when(client).getRefund(any());
+
+        TransactionStatusRequest request = MockUtils.aPaylineTransactionStatusRequestBuilder()
+                .withTransactionId(transactionId)
+                .build();
+
+        PaymentResponse response = service.handleSessionExpired(request);
+        Assertions.assertEquals(PaymentResponseSuccess.class, response.getClass());
+        PaymentResponseSuccess responseSuccess = (PaymentResponseSuccess) response;
+        Assertions.assertEquals(transactionId, responseSuccess.getPartnerTransactionId());
+        Assertions.assertEquals("Refunded", responseSuccess.getStatusCode());
+
+        Mockito.verify(client, Mockito.atLeastOnce()).getRefund(eq(transactionId));
+        Mockito.verify(client, Mockito.never()).getCheckoutSession(any());
     }
 }

@@ -1,10 +1,11 @@
 package com.payline.payment.amazonv2.service.impl;
 
-import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
+import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
 import com.payline.payment.amazonv2.bean.nested.Price;
+import com.payline.payment.amazonv2.bean.nested.StatusDetails;
 import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
@@ -18,6 +19,7 @@ import com.payline.pmapi.bean.payment.request.TransactionStatusRequest;
 import com.payline.pmapi.bean.payment.response.PaymentResponse;
 import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.BuyerPaymentId;
 import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.Email;
+import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.EmptyTransactionDetails;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
@@ -55,7 +57,7 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
         } catch (PluginException e) {
             LOGGER.info("unable to execute PaymentWithRedirectionServiceImpl#finalizeRedirectionPayment", e);
             response = e.toPaymentResponseFailureBuilder().build();
-        } catch (RuntimeException e){
+        } catch (RuntimeException e) {
             LOGGER.error("Unexpected plugin error", e);
             response = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
@@ -66,25 +68,35 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
     }
 
     @Override
-    public PaymentResponse handleSessionExpired(TransactionStatusRequest transactionStatusRequest) {
-        // voir dans quel process on est (paiement / remboursement)
-        // dans le cas paiement partnerTranasctionId = ChechoutSessionID
-        // dans le cas refund partnerTransactionId = RefundId
+    public PaymentResponse handleSessionExpired(TransactionStatusRequest request) {
+        PaymentResponse response;
 
-        // dans le ca paiement => getChechoutSesion
-        //client.getCheckoutSession()
+        // verify if it's a payment or a refund partnerTransactionId
+        String transactionId = request.getTransactionId();
 
-        // dans le cas refund => getRefund
-        //client.getRefund()
-        return null;
+        RequestConfiguration configuration = RequestConfiguration.build(request);
+        client.init(configuration);
+
+        if (transactionId.startsWith("S")) {
+            // refundTransactionId
+            Refund refund = client.getRefund(transactionId);
+            response = createPaymentResponseFromRefund(refund);
+        } else {
+            // payment transactionId
+            CheckoutSession session = client.getCheckoutSession(transactionId);
+            String email = session.getBuyer().getEmail();
+            response = createPaymentResponseFromCheckoutSession(session, email);
+        }
+
+        return response;
     }
 
     private PaymentResponse step1(RedirectionPaymentRequest request) {
         RequestConfiguration configuration = RequestConfiguration.build(request);
 
         // get the checkoutSessionId
-        String REQUEST_PARAMETER_CSI = "AmazonCheckoutSessionId";
-        String checkoutSessionId = request.getHttpRequestParametersMap().get(REQUEST_PARAMETER_CSI)[0];
+        String amazonCheckoutSessionId = "AmazonCheckoutSessionId";
+        String checkoutSessionId = request.getHttpRequestParametersMap().get(amazonCheckoutSessionId)[0];
 
         // get the checkoutSession
         client.init(configuration);
@@ -123,20 +135,30 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
 
         client.init(configuration);
         CheckoutSession session = client.completeCheckoutSession(checkoutSessionId, details);
+        String email = request.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL);
+
+        return createPaymentResponseFromCheckoutSession(session, email);
+    }
 
 
+    private PaymentResponse createPaymentResponseFromCheckoutSession(CheckoutSession session, String email) {
         PaymentResponse response;
+
+        BuyerPaymentId transactionDetails = Email.EmailBuilder
+                .anEmail()
+                .withEmail(email)
+                .build();
+
         if ("Completed".equalsIgnoreCase(session.getStatusDetails().getState())) {
             // the payment is authorized
-            response = chargeRequest(request, session, chargeAmount);
-
-        } else {
-            // return a failure Payment response
-            String email = request.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL);
-            BuyerPaymentId transactionDetails = Email.EmailBuilder
-                    .anEmail()
-                    .withEmail(email)
+            response = PaymentResponseSuccess.PaymentResponseSuccessBuilder
+                    .aPaymentResponseSuccess()
+                    .withPartnerTransactionId(session.getChargeId())
+                    .withStatusCode(session.getStatusDetails().getState())
+                    .withTransactionDetails(transactionDetails)
                     .build();
+        } else {
+            // failure
             response = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
                     .withPartnerTransactionId(session.getChargeId())
@@ -149,43 +171,32 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
         return response;
     }
 
-    public PaymentResponse chargeRequest(RedirectionPaymentRequest request, CheckoutSession session, Price chargeAmount) {
+    private PaymentResponse createPaymentResponseFromRefund(Refund refund) {
         PaymentResponse response;
+        StatusDetails details = refund.getStatusDetails();
 
-        Charge charge = Charge.builder()
-                .chargePermissionId(session.getChargePermissionId())
-                .chargeAmount(chargeAmount)
-                .captureNow(true)
-                .softDescriptor(request.getSoftDescriptor())
-                .canHandlePendingAuthorization(false)
-                .merchantMetadata(session.getMerchantMetadata())
-                .build();
-
-        charge = client.createCharge(charge);
-
-        // return a final Payment response
-        String email = request.getRequestContext().getRequestData().get(RequestContextKeys.EMAIL);
-        BuyerPaymentId transactionDetails = Email.EmailBuilder
-                .anEmail()
-                .withEmail(email)
-                .build();
-        if ("Captured".equals(charge.getStatusDetails().getState())) {
+        if ("Refunded".equalsIgnoreCase(details.getState())) {
             response = PaymentResponseSuccess.PaymentResponseSuccessBuilder
                     .aPaymentResponseSuccess()
-                    .withPartnerTransactionId(session.getChargeId())
-                    .withStatusCode(session.getStatusDetails().getState())
-                    .withTransactionDetails(transactionDetails)
+                    .withPartnerTransactionId(refund.getRefundId())
+                    .withStatusCode(details.getState())
+                    .withTransactionDetails(new EmptyTransactionDetails())
                     .build();
-        } else {
+        } else if ("Declined".equalsIgnoreCase(details.getState())) {
             response = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
-                    .withPartnerTransactionId(session.getChargeId())
-                    .withErrorCode(session.getStatusDetails().getReasonDescription())
-                    .withFailureCause(ReasonCodeConverter.convert(session.getStatusDetails().getReasonCode()))
-                    .withTransactionDetails(transactionDetails)
+                    .withPartnerTransactionId(refund.getRefundId())
+                    .withErrorCode(details.getReasonDescription())
+                    .withFailureCause(ReasonCodeConverter.convert(details.getReasonCode()))
+                    .build();
+        } else {
+            response = PaymentResponseSuccess.PaymentResponseSuccessBuilder
+                    .aPaymentResponseSuccess()
+                    .withPartnerTransactionId(refund.getRefundId())
+                    .withStatusCode("PENDING")
+                    .withTransactionDetails(new EmptyTransactionDetails())
                     .build();
         }
-
         return response;
     }
 }

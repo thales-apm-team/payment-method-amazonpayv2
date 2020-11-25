@@ -20,15 +20,14 @@ import org.apache.logging.log4j.Logger;
 public class RefundServiceImpl implements RefundService {
     private static final Logger LOGGER = LogManager.getLogger(RefundServiceImpl.class);
 
-    private final ClientUtils client = ClientUtils.getInstance();
+    private ClientUtils client = ClientUtils.getInstance();
 
     @Override
     public RefundResponse refundRequest(RefundRequest request) {
         RequestConfiguration configuration = RequestConfiguration.build(request);
-        RefundResponse response = null;
+        RefundResponse response;
 
         try {
-
             // create Refund object
             Price refundAmount = Price.builder()
                     .amount(PluginUtils.createStringAmount(request.getAmount()))
@@ -53,7 +52,7 @@ public class RefundServiceImpl implements RefundService {
             if ("Refunded".equalsIgnoreCase(details.getState())) {
                 response = RefundResponseSuccess.RefundResponseSuccessBuilder
                         .aRefundResponseSuccess()
-                        .withPartnerTransactionId(refund.getChargeId())
+                        .withPartnerTransactionId(refund.getRefundId())
                         .withStatusCode(details.getState())
                         .build();
             } else if ("Declined".equalsIgnoreCase(details.getState())) {

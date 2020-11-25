@@ -54,6 +54,30 @@ class ClientUtilsTest {
     }
 
     @Test
+    void isPublicKeyOkNominal() throws Exception {
+        AmazonPayResponse response = new AmazonPayResponse();
+        response.setStatus(404);
+        response.setRawResponse("{\"reasonCode\":\"ResourceNotFound\"," +
+                "\"message\":\"Resource you are trying to access is not available. Requested path '/sandbox/v2/checkoutSessions/0'\"" +
+                "}");
+
+        Mockito.doReturn(response).when(webstoreClient).getCheckoutSession(any());
+        Assertions.assertTrue( client.isPublicKeyIdOk() );
+    }
+
+    @Test
+    void isPublicKeyOkFalse() throws Exception {
+        AmazonPayResponse response = new AmazonPayResponse();
+        response.setStatus(400);
+        response.setRawResponse("{\"reasonCode\":\"InvalidHeaderValue\"," +
+                "\"message\":\"This is an error message'\"" +
+                "}");
+        Mockito.doReturn(response).when(webstoreClient).getCheckoutSession(any());
+
+        Assertions.assertFalse( client.isPublicKeyIdOk() );
+    }
+
+    @Test
     void getCheckoutSessionNominal() throws Exception {
         AmazonPayResponse response = new AmazonPayResponse();
         response.setStatus(200);
@@ -109,7 +133,8 @@ class ClientUtilsTest {
     void updateCheckoutSessionException() throws Exception {
         Mockito.doThrow(new AmazonPayClientException("foo")).when(webstoreClient).updateCheckoutSession(anyString(), any());
 
-        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.updateCheckoutSession(checkoutSessionId, CheckoutSession.builder().build()));
+        CheckoutSession session = CheckoutSession.builder().build();
+        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.updateCheckoutSession(checkoutSessionId, session));
         Assertions.assertEquals("unable to call for an updateCheckoutSession", e.getErrorCode());
 
     }
@@ -140,7 +165,8 @@ class ClientUtilsTest {
     void completeCheckoutSessionException() throws Exception {
         Mockito.doThrow(new AmazonPayClientException("foo")).when(webstoreClient).completeCheckoutSession(anyString(), any());
 
-        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.completeCheckoutSession(checkoutSessionId, PaymentDetails.builder().build()));
+        PaymentDetails paymentDetails = PaymentDetails.builder().build();
+        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.completeCheckoutSession(checkoutSessionId, paymentDetails));
         Assertions.assertEquals("unable to call for a completeCheckoutSession", e.getErrorCode());
     }
 
@@ -164,7 +190,8 @@ class ClientUtilsTest {
     void createRefundException() throws Exception {
         Mockito.doThrow(new AmazonPayClientException("foo")).when(webstoreClient).createRefund(any());
 
-        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.createRefund(Refund.builder().build()));
+        Refund refund = Refund.builder().build();
+        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.createRefund(refund));
         Assertions.assertEquals("unable to call for a createRefund", e.getErrorCode());
     }
 

@@ -22,6 +22,8 @@ class SignatureUtilsTest {
     @Mock
     AmazonPayClient client;
 
+    CheckoutSession session = CheckoutSession.builder().build();
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -31,7 +33,7 @@ class SignatureUtilsTest {
     void generateSignatureNominal() throws Exception {
         Mockito.doReturn("thisIsASignature").when(client).generateButtonSignature(any(JSONObject.class));
 
-        String signature = signatureUtils.generateSignature(CheckoutSession.builder().build());
+        String signature = signatureUtils.generateSignature(session);
         Assertions.assertEquals("thisIsASignature", signature);
     }
 
@@ -39,7 +41,7 @@ class SignatureUtilsTest {
     void generateSignatureException() throws Exception {
         Mockito.doThrow(new AmazonPayClientException("foo")).when(client).generateButtonSignature(any(JSONObject.class));
 
-        PluginException e = Assertions.assertThrows(PluginException.class, () -> signatureUtils.generateSignature(CheckoutSession.builder().build()));
+        PluginException e = Assertions.assertThrows(PluginException.class, () -> signatureUtils.generateSignature(session));
         Assertions.assertEquals("Unable to generate signature", e.getErrorCode());
     }
 }

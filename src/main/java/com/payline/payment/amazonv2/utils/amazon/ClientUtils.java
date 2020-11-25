@@ -3,7 +3,6 @@ package com.payline.payment.amazonv2.utils.amazon;
 import com.amazon.pay.api.AmazonPayResponse;
 import com.amazon.pay.api.WebstoreClient;
 import com.amazon.pay.api.exceptions.AmazonPayClientException;
-import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.ErrorResponse;
 import com.payline.payment.amazonv2.bean.Refund;
@@ -147,27 +146,6 @@ public class ClientUtils extends ConfigurationUtils {
             throw new PluginException(errorMessage, e);
         }
     }
-
-    public Charge createCharge(Charge charge) {
-        try {
-            // convert Charge into JSONObject
-            JSONObject jsonObject = jsonService.toJSONObject(jsonService.toJson(charge));
-
-            // use APV2 library to call for create charge
-            AmazonPayResponse response = client.createCharge(jsonObject);
-
-            // check response
-            checkResponse(response);
-
-            // return Charge object
-            return jsonService.fromJson(response.getRawResponse(), Charge.class);
-        } catch (AmazonPayClientException e) {
-            String errorMessage = "unable to call for a createCharge";
-            LOGGER.error(errorMessage);
-            throw new PluginException(errorMessage, e);
-        }
-    }
-
 
     public Refund getRefund(String refundId) {
         try {
