@@ -26,6 +26,7 @@ public class RefundServiceImpl implements RefundService {
     public RefundResponse refundRequest(RefundRequest request) {
         RequestConfiguration configuration = RequestConfiguration.build(request);
         RefundResponse response;
+        String refundId = "UNKNOWN";
 
         try {
             // create Refund object
@@ -43,7 +44,7 @@ public class RefundServiceImpl implements RefundService {
             // call for a refund creation
             client.init(configuration);
             refund = client.createRefund(refund);
-            String refundId = refund.getRefundId();
+            refundId = refund.getRefundId();
 
             // synchronously ask for the refund status until it's a final status
             refund = client.getRefund(refundId);
@@ -73,11 +74,13 @@ public class RefundServiceImpl implements RefundService {
         }catch (PluginException e){
             LOGGER.info("unable to execute RefundService#refundRequest", e);
             response = e.toRefundResponseFailureBuilder()
+                    .withPartnerTransactionId(refundId)
                     .build();
         }catch (RuntimeException e){
             LOGGER.error("Unexpected plugin error", e);
             response = RefundResponseFailure.RefundResponseFailureBuilder
                     .aRefundResponseFailure()
+                    .withPartnerTransactionId(refundId)
                     .withErrorCode(PluginException.runtimeErrorCode(e))
                     .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }

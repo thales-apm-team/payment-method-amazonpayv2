@@ -6,9 +6,11 @@ import com.payline.payment.amazonv2.bean.nested.ButtonColor;
 import com.payline.payment.amazonv2.bean.nested.CreateCheckoutSessionConfig;
 import com.payline.payment.amazonv2.bean.nested.Placement;
 import com.payline.payment.amazonv2.bean.nested.ProductType;
+import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.payment.amazonv2.utils.form.FormUtils;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.configuration.PartnerConfiguration;
+import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.paymentform.bean.form.PartnerWidgetForm;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationRequest;
 import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConfigurationResponse;
@@ -77,7 +79,6 @@ class PaymentFormConfigurationServiceImplTest {
 
     @Test
     void getPaymentFormConfigurationBadUrl() {
-
         PaymentFormConfigurationRequest request = MockUtils.aPaymentFormConfigurationRequestBuilder()
                 .withPartnerConfiguration(new PartnerConfiguration(new HashMap<>(), new HashMap<>()))
                 .build();
@@ -92,5 +93,29 @@ class PaymentFormConfigurationServiceImplTest {
         Assertions.assertEquals(FailureCause.INVALID_DATA, responseFailure.getFailureCause());
     }
 
-    // todo TU runtimeException et TU PluginException
+    @Test
+    void getPaymentFormConfigurationPluginException(){
+        Mockito.doThrow(new PluginException("foo", FailureCause.INVALID_DATA)).when(formUtils).createScript(any());
+
+        PaymentFormConfigurationResponse response = service.getPaymentFormConfiguration(MockUtils.aPaymentFormConfigurationRequest());
+        Assertions.assertEquals(PaymentFormConfigurationResponseFailure.class, response.getClass());
+        PaymentFormConfigurationResponseFailure responseFailure = (PaymentFormConfigurationResponseFailure) response;
+
+        Assertions.assertEquals("NO TRANSACTION YET", responseFailure.getPartnerTransactionId());
+        Assertions.assertEquals("foo", responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INVALID_DATA, responseFailure.getFailureCause());
+    }
+
+    @Test
+    void getPaymentFormConfigurationRuntimeException(){
+        Mockito.doThrow(new NullPointerException("foo")).when(formUtils).createScript(any());
+
+        PaymentFormConfigurationResponse response = service.getPaymentFormConfiguration(MockUtils.aPaymentFormConfigurationRequest());
+        Assertions.assertEquals(PaymentFormConfigurationResponseFailure.class, response.getClass());
+        PaymentFormConfigurationResponseFailure responseFailure = (PaymentFormConfigurationResponseFailure) response;
+
+        Assertions.assertEquals("NO TRANSACTION YET", responseFailure.getPartnerTransactionId());
+        Assertions.assertEquals("foo", responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INTERNAL_ERROR, responseFailure.getFailureCause());
+    }
 }

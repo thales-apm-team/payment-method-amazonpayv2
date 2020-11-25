@@ -23,7 +23,7 @@ public class PluginException extends RuntimeException {
 
     public PluginException(String message, FailureCause failureCause) {
         super(message);
-        if (message == null || message.length() == 0 || failureCause == null) {
+        if (PluginUtils.isEmpty(message)  || failureCause == null) {
             throw new IllegalStateException("PluginException must have a non-empty message and a failureCause");
         }
         this.errorCode = PluginUtils.truncate(message, ERROR_CODE_MAX_LENGTH);
@@ -36,7 +36,7 @@ public class PluginException extends RuntimeException {
 
     public PluginException(String message, FailureCause failureCause, Exception cause) {
         super(message, cause);
-        if (message == null || message.length() == 0 || failureCause == null) {
+        if (PluginUtils.isEmpty(message) || failureCause == null) {
             throw new IllegalStateException("PluginException must have a non-empty message and a failureCause");
         }
         this.errorCode = PluginUtils.truncate(message, ERROR_CODE_MAX_LENGTH);

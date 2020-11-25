@@ -51,7 +51,7 @@ public class FormUtils {
      * Create the Amazon pay script
      *
      * @param request Payline request used to fill data in the script
-     * @return
+     * @return the script to load
      */
     public Script createScript(PaymentFormConfigurationRequest request) {
         RequestConfiguration configuration = RequestConfiguration.build(request);
@@ -150,23 +150,22 @@ public class FormUtils {
     }
 
     /**
-     * @param address
-     * @return
+     * @param address an Address Object
+     * @return an address in String
      */
-    public static String createStringAddress(Address address) {
-        StringBuilder sb = new StringBuilder(address.getName());
+    public String createStringAddress(Address address) {
 
-        sb.append(PluginUtils.addIfExist(address.getAddressLine1()));
-        sb.append(PluginUtils.addIfExist(address.getAddressLine2()));
-        sb.append(PluginUtils.addIfExist(address.getAddressLine3()));
-        sb.append(PluginUtils.addIfExist(address.getCity()));
-        sb.append(PluginUtils.addIfExist(address.getDistrict()));
-        sb.append(PluginUtils.addIfExist(address.getStateOrRegion()));
-        sb.append(PluginUtils.addIfExist(address.getPostalCode()));
-        sb.append(PluginUtils.addIfExist(address.getCountryCode()));
-        sb.append(PluginUtils.addIfExist(address.getPhoneNumber()));
-
-        return sb.toString();
+        String sb = PluginUtils.addIfExist(address.getName()) +
+                PluginUtils.addIfExist(address.getAddressLine1()) +
+                PluginUtils.addIfExist(address.getAddressLine2()) +
+                PluginUtils.addIfExist(address.getAddressLine3()) +
+                PluginUtils.addIfExist(address.getCity()) +
+                PluginUtils.addIfExist(address.getDistrict()) +
+                PluginUtils.addIfExist(address.getStateOrRegion()) +
+                PluginUtils.addIfExist(address.getPostalCode()) +
+                PluginUtils.addIfExist(address.getCountryCode()) +
+                PluginUtils.addIfExist(address.getPhoneNumber());
+        return sb.trim();
     }
 
 

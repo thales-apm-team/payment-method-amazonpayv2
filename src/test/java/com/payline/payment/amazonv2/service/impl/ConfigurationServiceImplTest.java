@@ -1,6 +1,7 @@
 package com.payline.payment.amazonv2.service.impl;
 
 import com.payline.payment.amazonv2.MockUtils;
+import com.payline.payment.amazonv2.exception.InvalidDataException;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.amazonv2.utils.properties.ReleaseProperties;
@@ -23,6 +24,7 @@ import java.time.Month;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static com.payline.pmapi.bean.configuration.request.ContractParametersCheckRequest.GENERIC_ERROR;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -113,6 +115,28 @@ class ConfigurationServiceImplTest {
         }
 
         Mockito.verify(client, never()).init(any());
+    }
+
+    @Test
+    void checkPluginException(){
+        Mockito.doThrow(new InvalidDataException("foo")).when(client).init(any());
+
+        ContractParametersCheckRequest request = MockUtils.aContractParametersCheckRequestBuilder().build();
+        Map<String, String> errors = service.check(request);
+
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals("foo", errors.get(GENERIC_ERROR));
+    }
+
+    @Test
+    void checkRuntimeException(){
+        Mockito.doThrow(new NullPointerException("foo")).when(client).init(any());
+
+        ContractParametersCheckRequest request = MockUtils.aContractParametersCheckRequestBuilder().build();
+        Map<String, String> errors = service.check(request);
+
+        Assertions.assertEquals(1, errors.size());
+        Assertions.assertEquals("foo", errors.get(GENERIC_ERROR));
     }
 
     @Test

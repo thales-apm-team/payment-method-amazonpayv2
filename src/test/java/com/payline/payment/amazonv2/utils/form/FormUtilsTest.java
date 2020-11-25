@@ -2,6 +2,7 @@ package com.payline.payment.amazonv2.utils.form;
 
 import com.payline.payment.amazonv2.MockUtils;
 import com.payline.payment.amazonv2.bean.Script;
+import com.payline.payment.amazonv2.bean.nested.Address;
 import com.payline.payment.amazonv2.bean.nested.ButtonColor;
 import com.payline.payment.amazonv2.bean.nested.Placement;
 import com.payline.payment.amazonv2.bean.nested.ProductType;
@@ -64,5 +65,22 @@ class FormUtilsTest {
         Assertions.assertEquals("en_GB", formUtils.getLanguage(Locale.ENGLISH));
 
         Assertions.assertEquals("en_GB", formUtils.getLanguage(Locale.CHINA));
+    }
+
+    @Test
+    void createStringAddress(){
+        Address address = Address.builder()
+                .addressLine1("address1")
+                .addressLine2("address2")
+                .addressLine3("address3")
+                .city("Seattle")
+                .county("King")
+                .district("Seattle")
+                .stateOrRegion("WA")
+                .postalCode("98121")
+                .countryCode("US")
+                .build();
+        String s = formUtils.createStringAddress(address);
+        Assertions.assertEquals("address1 address2 address3 Seattle Seattle WA 98121 US", s);
     }
 }

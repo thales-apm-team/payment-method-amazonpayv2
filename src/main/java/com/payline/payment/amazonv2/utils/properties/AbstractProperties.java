@@ -1,6 +1,7 @@
 package com.payline.payment.amazonv2.utils.properties;
 
 import com.payline.payment.amazonv2.exception.PluginException;
+import com.payline.payment.amazonv2.utils.PluginUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,7 +32,7 @@ public abstract class AbstractProperties {
      */
     void readProperties() {
         String filename = getFilename();
-        if (filename == null || filename.isEmpty()) {
+        if (PluginUtils.isEmpty(filename)) {
             throw new PluginException("Properties filename must not be null or empty");
         }
 

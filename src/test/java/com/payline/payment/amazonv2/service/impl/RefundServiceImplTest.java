@@ -3,6 +3,7 @@ package com.payline.payment.amazonv2.service.impl;
 import com.payline.payment.amazonv2.MockUtils;
 import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
+import com.payline.payment.amazonv2.exception.InvalidDataException;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.payment.RequestContext;
@@ -93,6 +94,32 @@ class RefundServiceImplTest {
         Assertions.assertEquals("S0234234234234-R01", responseFailure.getPartnerTransactionId());
         Assertions.assertEquals("sorry", responseFailure.getErrorCode());
         Assertions.assertEquals(FailureCause.REFUSED, responseFailure.getFailureCause());
+    }
+
+    @Test
+    void refundRequestPluginException(){
+        RefundRequest request = MockUtils.aPaylineRefundRequestBuilder().build();
+        Mockito.doThrow(new InvalidDataException("foo")).when(client).createRefund(any());
+
+        RefundResponse response = service.refundRequest(request);
+        Assertions.assertEquals(RefundResponseFailure.class, response.getClass());
+        RefundResponseFailure responseFailure = (RefundResponseFailure) response;
+        Assertions.assertEquals("UNKNOWN", responseFailure.getPartnerTransactionId());
+        Assertions.assertEquals("foo", responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INVALID_DATA, responseFailure.getFailureCause());
+    }
+
+    @Test
+    void refundRequestRuntimeException(){
+        RefundRequest request = MockUtils.aPaylineRefundRequestBuilder().build();
+        Mockito.doThrow(new NullPointerException("foo")).when(client).createRefund(any());
+
+        RefundResponse response = service.refundRequest(request);
+        Assertions.assertEquals(RefundResponseFailure.class, response.getClass());
+        RefundResponseFailure responseFailure = (RefundResponseFailure) response;
+        Assertions.assertEquals("UNKNOWN", responseFailure.getPartnerTransactionId());
+        Assertions.assertEquals("plugin error: NullPointerException: foo", responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INTERNAL_ERROR, responseFailure.getFailureCause());
     }
 
     @Test

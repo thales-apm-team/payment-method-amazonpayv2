@@ -5,13 +5,16 @@ import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.nested.Buyer;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
+import com.payline.payment.amazonv2.exception.InvalidDataException;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.constant.RequestContextKeys;
+import com.payline.pmapi.bean.common.FailureCause;
 import com.payline.pmapi.bean.payment.RequestContext;
 import com.payline.pmapi.bean.payment.request.RedirectionPaymentRequest;
 import com.payline.pmapi.bean.payment.request.TransactionStatusRequest;
 import com.payline.pmapi.bean.payment.response.PaymentResponse;
 import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.Email;
+import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
 import com.payline.pmapi.bean.paymentform.bean.field.PaymentFormDisplayFieldText;
@@ -133,7 +136,90 @@ class PaymentWithRedirectionServiceImplTest {
         Email email = (Email) responseSuccess.getTransactionDetails();
 
         Assertions.assertEquals("foo@bar.baz", email.getEmail());
+    }
 
+    @Test
+    void finalizeRedirectionPaymentRequestOtherStep(){
+        Map<String, String> requestData = new HashMap<>();
+        requestData.put(RequestContextKeys.STEP, "foo");
+        requestData.put(RequestContextKeys.CHECKOUT_SESSION_ID, checkoutSessionId);
+        requestData.put(RequestContextKeys.EMAIL, "foo@bar.baz");
+
+        RequestContext context = RequestContext.RequestContextBuilder
+                .aRequestContext()
+                .withRequestData(requestData)
+                .build();
+
+        RedirectionPaymentRequest request = RedirectionPaymentRequest.builder()
+                .withRequestContext(context)
+                .withLocale(Locale.FRANCE)
+                .withContractConfiguration(MockUtils.aContractConfiguration())
+                .withPartnerConfiguration(MockUtils.aPartnerConfiguration())
+                .withEnvironment(MockUtils.anEnvironment())
+                .withTransactionId("UNKNOWN_TRANSACTION")
+                .withAmount(MockUtils.aPaylineAmount())
+                .withOrder(MockUtils.aPaylineOrder())
+                .withBuyer(MockUtils.aBuyer())
+                .withBrowser(MockUtils.aBrowser())
+                .build();
+
+        PaymentResponse response = service.finalizeRedirectionPayment(request);
+        Assertions.assertEquals(PaymentResponseFailure.class, response.getClass());
+        PaymentResponseFailure responseFailure = (PaymentResponseFailure) response;
+        Assertions.assertEquals("Unknown step foo",responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INVALID_DATA, responseFailure.getFailureCause());
+    }
+
+    @Test
+    void finalizeRedirectionPaymentRequestPluginException(){
+        Mockito.doThrow(new InvalidDataException("foo")).when(client).getCheckoutSession(any());
+
+        Map<String, String[]> httpRequestParameters = new HashMap<>();
+        httpRequestParameters.put("AmazonCheckoutSessionId", new String[]{checkoutSessionId});
+
+        RedirectionPaymentRequest request = RedirectionPaymentRequest.builder()
+                .withHttpRequestParametersMap(httpRequestParameters)
+                .withLocale(Locale.FRANCE)
+                .withContractConfiguration(MockUtils.aContractConfiguration())
+                .withPartnerConfiguration(MockUtils.aPartnerConfiguration())
+                .withEnvironment(MockUtils.anEnvironment())
+                .withTransactionId("UNKNOWN_TRANSACTION")
+                .withAmount(MockUtils.aPaylineAmount())
+                .withOrder(MockUtils.aPaylineOrder())
+                .withBuyer(MockUtils.aBuyer())
+                .withBrowser(MockUtils.aBrowser())
+                .build();
+        PaymentResponse response = service.finalizeRedirectionPayment(request);
+        Assertions.assertEquals(PaymentResponseFailure.class, response.getClass());
+        PaymentResponseFailure responseFailure = (PaymentResponseFailure) response;
+        Assertions.assertEquals("foo",responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INVALID_DATA, responseFailure.getFailureCause());
+    }
+
+    @Test
+    void finalizeRedirectionPaymentRequestRuntimeException(){
+        Mockito.doThrow(new NullPointerException("foo")).when(client).getCheckoutSession(any());
+
+        Map<String, String[]> httpRequestParameters = new HashMap<>();
+        httpRequestParameters.put("AmazonCheckoutSessionId", new String[]{checkoutSessionId});
+
+        RedirectionPaymentRequest request = RedirectionPaymentRequest.builder()
+                .withHttpRequestParametersMap(httpRequestParameters)
+                .withLocale(Locale.FRANCE)
+                .withContractConfiguration(MockUtils.aContractConfiguration())
+                .withPartnerConfiguration(MockUtils.aPartnerConfiguration())
+                .withEnvironment(MockUtils.anEnvironment())
+                .withTransactionId("UNKNOWN_TRANSACTION")
+                .withAmount(MockUtils.aPaylineAmount())
+                .withOrder(MockUtils.aPaylineOrder())
+                .withBuyer(MockUtils.aBuyer())
+                .withBrowser(MockUtils.aBrowser())
+                .build();
+        PaymentResponse response = service.finalizeRedirectionPayment(request);
+        Assertions.assertEquals(PaymentResponseFailure.class, response.getClass());
+        PaymentResponseFailure responseFailure = (PaymentResponseFailure) response;
+        Assertions.assertEquals("plugin error: NullPointerException: foo",responseFailure.getErrorCode());
+        Assertions.assertEquals(FailureCause.INTERNAL_ERROR, responseFailure.getFailureCause());
     }
 
     @Test
