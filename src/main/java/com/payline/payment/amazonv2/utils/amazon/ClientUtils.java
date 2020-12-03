@@ -10,12 +10,11 @@ import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
 import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.pmapi.bean.common.FailureCause;
-import com.payline.pmapi.logger.LogManager;
+import lombok.extern.log4j.Log4j2;
 import net.sf.json.JSONObject;
-import org.apache.logging.log4j.Logger;
 
+@Log4j2
 public class ClientUtils extends ConfigurationUtils {
-    private static final Logger LOGGER = LogManager.getLogger(ClientUtils.class);
 
     private WebstoreClient client;
 
@@ -34,7 +33,7 @@ public class ClientUtils extends ConfigurationUtils {
             client = new WebstoreClient(this.payConfiguration);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to init Amazon client utils";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -58,13 +57,13 @@ public class ClientUtils extends ConfigurationUtils {
 
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for a getCheckoutSession in isPublicKeyIdOk";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
 
         // this method should never get here
         String errorMessage = "this method should catch an AmazonPayClientException";
-        LOGGER.error(errorMessage);
+        log.error(errorMessage);
         throw new PluginException(errorMessage, FailureCause.PARTNER_UNKNOWN_ERROR);
     }
 
@@ -81,7 +80,7 @@ public class ClientUtils extends ConfigurationUtils {
             return jsonService.fromJson(response.getRawResponse(), CheckoutSession.class);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for a getCheckoutSession";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -102,7 +101,7 @@ public class ClientUtils extends ConfigurationUtils {
             return jsonService.fromJson(response.getRawResponse(), CheckoutSession.class);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for an updateCheckoutSession";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -122,7 +121,7 @@ public class ClientUtils extends ConfigurationUtils {
             return jsonService.fromJson(response.getRawResponse(), CheckoutSession.class);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for a completeCheckoutSession";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -142,7 +141,7 @@ public class ClientUtils extends ConfigurationUtils {
             return jsonService.fromJson(response.getRawResponse(), Refund.class);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for a createRefund";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -159,7 +158,7 @@ public class ClientUtils extends ConfigurationUtils {
             return jsonService.fromJson(response.getRawResponse(), Refund.class);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to call for a getRefund";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
 

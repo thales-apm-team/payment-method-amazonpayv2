@@ -7,9 +7,8 @@ import com.payline.pmapi.bean.paymentform.bean.PaymentFormLogo;
 import com.payline.pmapi.bean.paymentform.request.PaymentFormLogoRequest;
 import com.payline.pmapi.bean.paymentform.response.logo.PaymentFormLogoResponse;
 import com.payline.pmapi.bean.paymentform.response.logo.impl.PaymentFormLogoResponseFile;
-import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.PaymentFormConfigurationService;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -17,10 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Locale;
-
+@Log4j2
 public abstract class LogoPaymentFormConfigurationService implements PaymentFormConfigurationService {
-
-    private static final Logger LOGGER = LogManager.getLogger(LogoPaymentFormConfigurationService.class);
 
     protected I18nService i18n = I18nService.getInstance();
     protected ConfigProperties config = ConfigProperties.getInstance();
@@ -64,7 +61,7 @@ public abstract class LogoPaymentFormConfigurationService implements PaymentForm
     private PaymentFormLogo getLogoByFilename(final String filename, final String format, final String contentType) {
         try (InputStream input = this.getClass().getClassLoader().getResourceAsStream(filename)) {
             if (input == null) {
-                LOGGER.error("Unable to load file {}", filename);
+                log.error("Unable to load file {}", filename);
                 throw new PluginException("Plugin error: unable to load the logo file");
             }
             // Read logo file

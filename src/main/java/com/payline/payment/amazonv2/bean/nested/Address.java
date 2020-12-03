@@ -1,10 +1,10 @@
 package com.payline.payment.amazonv2.bean.nested;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Value;
 
 @Builder
-@Getter
+@Value
 public class Address {
     private String name;
     private String addressLine1;

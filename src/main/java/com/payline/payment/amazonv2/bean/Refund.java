@@ -2,13 +2,14 @@ package com.payline.payment.amazonv2.bean;
 
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.EqualsAndHashCode;
+import lombok.Value;
+import lombok.experimental.SuperBuilder;
 
-import java.util.Date;
 
-
-@Getter
+@Value
+@EqualsAndHashCode(callSuper = true)
+@SuperBuilder
 public class Refund extends AmazonBean {
     private String refundId;
     private String chargeId;
@@ -16,13 +17,5 @@ public class Refund extends AmazonBean {
     private String softDescriptor;
     private StatusDetails statusDetails;
 
-    @Builder
-    public Refund(Date creationTimestamp, ReleaseEnvironment releaseEnvironment, String refundId, String chargeId, Price refundAmount, String softDescriptor, StatusDetails statusDetails) {
-        super(creationTimestamp, releaseEnvironment);
-        this.refundId = refundId;
-        this.chargeId = chargeId;
-        this.refundAmount = refundAmount;
-        this.softDescriptor = softDescriptor;
-        this.statusDetails = statusDetails;
-    }
+
 }

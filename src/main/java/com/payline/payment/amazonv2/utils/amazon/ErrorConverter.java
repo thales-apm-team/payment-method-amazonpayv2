@@ -1,15 +1,14 @@
 package com.payline.payment.amazonv2.utils.amazon;
 
 import com.payline.pmapi.bean.common.FailureCause;
+import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@UtilityClass
 public class ErrorConverter {
-    private static final Map<String, FailureCause> errors = new HashMap<>();
-
-    private ErrorConverter() {
-    }
+    private final Map<String, FailureCause> errors = new HashMap<>();
 
     static {
         // generic errors
@@ -68,7 +67,7 @@ public class ErrorConverter {
      * @param errorCode the Amazon error code
      * @return the corresponding FailureCause or PARTNER_UNKNOWN_ERROR
      */
-    public static FailureCause convert(String errorCode) {
+    public FailureCause convert(String errorCode) {
         FailureCause cause = errors.get(errorCode);
 
         if (cause == null) {

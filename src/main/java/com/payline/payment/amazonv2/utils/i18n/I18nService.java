@@ -1,8 +1,7 @@
 package com.payline.payment.amazonv2.utils.i18n;
 
 import com.payline.payment.amazonv2.utils.properties.ConfigProperties;
-import com.payline.pmapi.logger.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.Locale;
 import java.util.MissingResourceException;
@@ -11,9 +10,9 @@ import java.util.ResourceBundle;
 /**
  * I18n (for Internationalization) service that provides messages following a given locale.
  */
+@Log4j2
 public class I18nService {
 
-    private static final Logger LOGGER = LogManager.getLogger(I18nService.class);
     private static final String DEFAULT_LOCALE = "en";
 
     private ConfigProperties configProperties = ConfigProperties.getInstance();
@@ -44,7 +43,7 @@ public class I18nService {
             return messages.getString(key);
         }
         catch (MissingResourceException e) {
-            LOGGER.error("Trying to get a message with a key that does not exist: {} (language: {})", key, locale.getLanguage());
+            log.error("Trying to get a message with a key that does not exist: {} (language: {})", key, locale.getLanguage());
             return "???" + locale + "." + key + "???";
         }
     }

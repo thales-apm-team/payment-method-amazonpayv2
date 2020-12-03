@@ -5,12 +5,12 @@ import com.amazon.pay.api.exceptions.AmazonPayClientException;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.exception.PluginException;
-import com.payline.pmapi.logger.LogManager;
+import lombok.extern.log4j.Log4j2;
 import net.sf.json.JSONObject;
-import org.apache.logging.log4j.Logger;
 
+@Log4j2
 public class SignatureUtils extends ConfigurationUtils {
-    private static final Logger LOGGER = LogManager.getLogger(SignatureUtils.class);
+
 
     private AmazonPayClient client;
 
@@ -29,7 +29,7 @@ public class SignatureUtils extends ConfigurationUtils {
             client = new AmazonPayClient(this.payConfiguration);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to init Amazon signature utils";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
     }
@@ -44,7 +44,7 @@ public class SignatureUtils extends ConfigurationUtils {
             return client.generateButtonSignature(jsonObject);
         } catch (AmazonPayClientException e) {
             String errorMessage = "Unable to generate signature";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             throw new PluginException(errorMessage, e);
         }
 

@@ -15,20 +15,22 @@ import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationReques
 import com.payline.pmapi.bean.paymentform.request.PaymentFormLogoRequest;
 import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.reset.request.ResetRequest;
+import lombok.experimental.UtilityClass;
 
 import java.math.BigInteger;
 import java.util.*;
 
 @SuppressWarnings("WeakerAccess")
+@UtilityClass
 public class MockUtils {
-    private static final String TRANSACTIONID = "123456789012345678901";
-    private static final String PARTNER_TRANSACTIONID = "098765432109876543210";
+    private final String TRANSACTIONID = "123456789012345678901";
+    private final String PARTNER_TRANSACTIONID = "098765432109876543210";
 
 
     /**
      * Generate a valid {@link Environment}.
      */
-    public static Environment anEnvironment() {
+    public Environment anEnvironment() {
         return new Environment("http://notificationURL.com",
                 "https://www.redirection.url.com",
                 "http://redirectionCancelURL.com",
@@ -38,7 +40,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link PartnerConfiguration}.
      */
-    public static PartnerConfiguration aPartnerConfiguration() {
+    public PartnerConfiguration aPartnerConfiguration() {
         Map<String, String> partnerConfigurationMap = new HashMap<>();
         partnerConfigurationMap.put(PartnerConfigurationKeys.AMAZON_SCRIPT_URL, "https://static-eu.payments-amazon.com/checkout.js");
         partnerConfigurationMap.put(PartnerConfigurationKeys.PLACEMENT, Placement.Cart.name());
@@ -58,7 +60,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link PaymentFormLogoRequest}.
      */
-    public static PaymentFormLogoRequest aPaymentFormLogoRequest() {
+    public PaymentFormLogoRequest aPaymentFormLogoRequest() {
         return PaymentFormLogoRequest.PaymentFormLogoRequestBuilder.aPaymentFormLogoRequest()
                 .withContractConfiguration(aContractConfiguration())
                 .withEnvironment(anEnvironment())
@@ -70,7 +72,7 @@ public class MockUtils {
     /**
      * Generate a valid, but not complete, {@link Order}
      */
-    public static Order aPaylineOrder() {
+    public Order aPaylineOrder() {
         List<Order.OrderItem> items = new ArrayList<>();
 
         items.add(Order.OrderItem.OrderItemBuilder
@@ -91,21 +93,21 @@ public class MockUtils {
     /**
      * Generate a valid Payline Amount.
      */
-    public static com.payline.pmapi.bean.common.Amount aPaylineAmount() {
+    public com.payline.pmapi.bean.common.Amount aPaylineAmount() {
         return new com.payline.pmapi.bean.common.Amount(BigInteger.valueOf(1000), Currency.getInstance("EUR"));
     }
 
     /**
      * @return a valid user agent.
      */
-    public static String aUserAgent() {
+    public String aUserAgent() {
         return "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:67.0) Gecko/20100101 Firefox/67.0";
     }
 
     /**
      * Generate a valid {@link Browser}.
      */
-    public static Browser aBrowser() {
+    public Browser aBrowser() {
         return Browser.BrowserBuilder.aBrowser()
                 .withLocale(Locale.getDefault())
                 .withIp("192.168.0.1")
@@ -116,7 +118,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link Buyer}.
      */
-    public static Buyer aBuyer() {
+    public Buyer aBuyer() {
         return Buyer.BuyerBuilder.aBuyer()
                 .withFullName(new Buyer.FullName("Marie", "Durand", "1"))
                 .withEmail("foo@bar.baz")
@@ -126,7 +128,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link PaymentFormContext}.
      */
-    public static PaymentFormContext aPaymentFormContext() {
+    public PaymentFormContext aPaymentFormContext() {
         Map<String, String> paymentFormParameter = new HashMap<>();
 
         return PaymentFormContext.PaymentFormContextBuilder.aPaymentFormContext()
@@ -138,7 +140,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link ContractParametersCheckRequest}.
      */
-    public static ContractParametersCheckRequest aContractParametersCheckRequest() {
+    public ContractParametersCheckRequest aContractParametersCheckRequest() {
         return aContractParametersCheckRequestBuilder().build();
     }
 
@@ -146,7 +148,7 @@ public class MockUtils {
      * Generate a builder for a valid {@link ContractParametersCheckRequest}.
      * This way, some attributes may be overridden to match specific test needs.
      */
-    public static ContractParametersCheckRequest.CheckRequestBuilder aContractParametersCheckRequestBuilder() {
+    public ContractParametersCheckRequest.CheckRequestBuilder aContractParametersCheckRequestBuilder() {
         return ContractParametersCheckRequest.CheckRequestBuilder.aCheckRequest()
                 .withAccountInfo(anAccountInfo())
                 .withContractConfiguration(aContractConfiguration())
@@ -158,7 +160,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link PaymentFormConfigurationRequest}.
      */
-    public static PaymentFormConfigurationRequest aPaymentFormConfigurationRequest() {
+    public PaymentFormConfigurationRequest aPaymentFormConfigurationRequest() {
         return aPaymentFormConfigurationRequestBuilder().build();
     }
 
@@ -166,7 +168,7 @@ public class MockUtils {
      * Generate a builder for a valid {@link PaymentFormConfigurationRequest}.
      * This way, some attributes may be overridden to match specific test needs.
      */
-    public static PaymentFormConfigurationRequest.PaymentFormConfigurationRequestBuilder aPaymentFormConfigurationRequestBuilder() {
+    public PaymentFormConfigurationRequest.PaymentFormConfigurationRequestBuilder aPaymentFormConfigurationRequestBuilder() {
         return PaymentFormConfigurationRequest.PaymentFormConfigurationRequestBuilder.aPaymentFormConfigurationRequest()
                 .withAmount(aPaylineAmount())
                 .withBuyer(aBuyer())
@@ -180,7 +182,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link PaymentRequest}.
      */
-    public static PaymentRequest aPaylinePaymentRequest() {
+    public PaymentRequest aPaylinePaymentRequest() {
         return aPaylinePaymentRequestBuilder().build();
     }
 
@@ -188,7 +190,7 @@ public class MockUtils {
      * Generate a builder for a valid {@link PaymentRequest}.
      * This way, some attributes may be overridden to match specific test needs.
      */
-    public static PaymentRequest.Builder aPaylinePaymentRequestBuilder() {
+    public PaymentRequest.Builder aPaylinePaymentRequestBuilder() {
         return PaymentRequest.builder()
                 .withAmount(aPaylineAmount())
                 .withBrowser(aBrowser())
@@ -204,11 +206,11 @@ public class MockUtils {
                 .withTransactionId(TRANSACTIONID);
     }
 
-    public static RefundRequest aPaylineRefundRequest() {
+    public RefundRequest aPaylineRefundRequest() {
         return aPaylineRefundRequestBuilder().build();
     }
 
-    public static RefundRequest.RefundRequestBuilder aPaylineRefundRequestBuilder() {
+    public RefundRequest.RefundRequestBuilder aPaylineRefundRequestBuilder() {
         return RefundRequest.RefundRequestBuilder.aRefundRequest()
                 .withAmount(aPaylineAmount())
                 .withOrder(aPaylineOrder())
@@ -220,7 +222,7 @@ public class MockUtils {
                 .withPartnerConfiguration(aPartnerConfiguration());
     }
 
-    public static ResetRequest.ResetRequestBuilder aPaylineResetRequestBuilder() {
+    public ResetRequest.ResetRequestBuilder aPaylineResetRequestBuilder() {
         return ResetRequest.ResetRequestBuilder.aResetRequest()
                 .withAmount(aPaylineAmount())
                 .withOrder(aPaylineOrder())
@@ -232,7 +234,7 @@ public class MockUtils {
                 .withPartnerConfiguration(aPartnerConfiguration());
     }
 
-    public static TransactionStatusRequest.TransactionStatusRequestBuilder aPaylineTransactionStatusRequestBuilder(){
+    public TransactionStatusRequest.TransactionStatusRequestBuilder aPaylineTransactionStatusRequestBuilder(){
         return TransactionStatusRequest.TransactionStatusRequestBuilder
                 .aNotificationRequest()
                 .withTransactionId(TRANSACTIONID)
@@ -245,7 +247,7 @@ public class MockUtils {
 
     }
 
-    public static TransactionStatusRequest aPaylineTransactionStatusRequest(){
+    public TransactionStatusRequest aPaylineTransactionStatusRequest(){
         return aPaylineTransactionStatusRequestBuilder().build();
     }
 
@@ -253,7 +255,7 @@ public class MockUtils {
     /**
      * Generate a valid accountInfo, an attribute of a {@link ContractParametersCheckRequest} instance.
      */
-    public static Map<String, String> anAccountInfo() {
+    public Map<String, String> anAccountInfo() {
         return anAccountInfo(aContractConfiguration());
     }
     /**------------------------------------------------------------------------------------------------------------------*/
@@ -264,7 +266,7 @@ public class MockUtils {
      *
      * @param contractConfiguration The model object from which the properties will be copied
      */
-    public static Map<String, String> anAccountInfo(ContractConfiguration contractConfiguration) {
+    public Map<String, String> anAccountInfo(ContractConfiguration contractConfiguration) {
         Map<String, String> accountInfo = new HashMap<>();
         for (Map.Entry<String, ContractProperty> entry : contractConfiguration.getContractProperties().entrySet()) {
             accountInfo.put(entry.getKey(), entry.getValue().getValue());
@@ -275,7 +277,7 @@ public class MockUtils {
     /**
      * Generate a valid {@link ContractConfiguration}.
      */
-    public static ContractConfiguration aContractConfiguration() {
+    public ContractConfiguration aContractConfiguration() {
         Map<String, ContractProperty> contractProperties = new HashMap<>();
 
         contractProperties.put(ContractConfigurationKeys.MERCHANT_ID, new ContractProperty("123123"));

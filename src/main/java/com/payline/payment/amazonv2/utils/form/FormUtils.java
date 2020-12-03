@@ -4,6 +4,7 @@ import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.Script;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.*;
+import com.payline.payment.amazonv2.service.RequestConfigurationService;
 import com.payline.payment.amazonv2.utils.JsonService;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.SignatureUtils;
@@ -54,7 +55,7 @@ public class FormUtils {
      * @return the script to load
      */
     public Script createScript(PaymentFormConfigurationRequest request) {
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
 
         CheckoutSession session = CheckoutSession.builder()
                 .webCheckoutDetails(WebCheckoutDetails.builder()

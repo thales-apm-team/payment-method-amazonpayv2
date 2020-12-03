@@ -7,6 +7,7 @@ import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.bean.nested.WebCheckoutDetails;
 import com.payline.payment.amazonv2.exception.PluginException;
+import com.payline.payment.amazonv2.service.RequestConfigurationService;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
@@ -17,23 +18,21 @@ import com.payline.pmapi.bean.payment.request.PaymentRequest;
 import com.payline.pmapi.bean.payment.response.PaymentResponse;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseRedirect;
-import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.PaymentService;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
-
+@Log4j2
 public class PaymentServiceImpl implements PaymentService {
-    private static final Logger LOGGER = LogManager.getLogger(PaymentServiceImpl.class);
 
     private ClientUtils client = ClientUtils.getInstance();
 
     @Override
     public PaymentResponse paymentRequest(PaymentRequest request) {
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
         PaymentResponse paymentResponse;
 
         // get checkout session id
@@ -50,13 +49,14 @@ public class PaymentServiceImpl implements PaymentService {
             paymentResponse = createPaymentResponseFromCheckoutSession(checkoutSession);
 
         } catch (PluginException e) {
-            LOGGER.info("unable to execute PaymentService#paymentRequest", e);
+            log.info("unable to execute PaymentService#paymentRequest", e);
+
             paymentResponse = e.toPaymentResponseFailureBuilder().withPartnerTransactionId(checkoutSessionId).build();
         } catch (RuntimeException e){
-            LOGGER.error("Unexpected plugin error", e);
+            log.error("Unexpected plugin error", e);
             paymentResponse = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
-                    .withErrorCode(PluginException.runtimeErrorCode(e))
+                    .withErrorCode(PluginUtils.runtimeErrorCode(e))
                     .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }
         return paymentResponse;
@@ -86,9 +86,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
 
         return CheckoutSession.builder()
+                .merchantMetadata(merchantMetadata)
                 .webCheckoutDetails(webCheckoutDetails)
                 .paymentDetails(paymentDetails)
-                .merchantMetaData(merchantMetadata)
                 .build();
     }
 
@@ -122,7 +122,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .build();
         } catch (MalformedURLException e) {
             String errorMessage = "Unable to convert AmazonPayRedirectUrl into an URL";
-            LOGGER.error(errorMessage);
+            log.error(errorMessage);
             paymentResponse = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
                     .withPartnerTransactionId(checkoutSessionId)
