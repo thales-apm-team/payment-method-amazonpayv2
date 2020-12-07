@@ -1,14 +1,13 @@
 package com.payline.payment.amazonv2.utils.constant;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class ContractConfigurationKeys {
-    public static final String MERCHANT_NAME = "merchantName";
-    public static final String MERCHANT_ID = "merchantId";
-    public static final String STORE_ID = "storeId";
-    public static final String PUBLIC_KEY_ID = "publicKeyId";
-    public static final String BUTTON_COLOR = "buttonColor";
-    public static final String PRODUCT_TYPE = "productType";
+    public final String MERCHANT_NAME = "merchantName";
+    public final String MERCHANT_ID = "merchantId";
+    public final String STORE_ID = "storeId";
+    public final String PUBLIC_KEY_ID = "publicKeyId";
+    public final String BUTTON_COLOR = "buttonColor";
+    public final String PRODUCT_TYPE = "productType";
 }

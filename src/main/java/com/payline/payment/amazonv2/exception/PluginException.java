@@ -96,15 +96,6 @@ public class PluginException extends RuntimeException {
                 .withErrorCode(errorCode);
     }
 
-    /**
-     * Utility static method to build an error code from a {@link RuntimeException}.
-     *
-     * @param e The exception
-     * @return A truncated errorCode to insert into any FailureResponse object.
-     */
-    public static String runtimeErrorCode(RuntimeException e) {
-        String errorCode = "plugin error: " + e.toString().substring(e.toString().lastIndexOf('.') + 1);
-        return PluginUtils.truncate(errorCode, ERROR_CODE_MAX_LENGTH);
-    }
+
 
 }

@@ -5,11 +5,11 @@ import com.payline.payment.amazonv2.bean.nested.CreateCheckoutSessionConfig;
 import com.payline.payment.amazonv2.bean.nested.Placement;
 import com.payline.payment.amazonv2.bean.nested.ProductType;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.NonNull;
+import lombok.Value;
 
 @Builder
-@Getter
+@Value
 public class Script {
 
     @NonNull

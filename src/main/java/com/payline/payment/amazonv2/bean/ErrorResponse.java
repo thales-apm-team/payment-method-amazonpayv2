@@ -1,8 +1,8 @@
 package com.payline.payment.amazonv2.bean;
 
-import lombok.Getter;
+import lombok.Value;
 
-@Getter
+@Value
 public class ErrorResponse {
     private String reasonCode;
     private String message;

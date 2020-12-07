@@ -1,12 +1,14 @@
 package com.payline.payment.amazonv2.utils.amazon;
 
 import com.payline.pmapi.bean.common.FailureCause;
+import lombok.experimental.UtilityClass;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@UtilityClass
 public class ReasonCodeConverter {
-    private static final Map<String, FailureCause> reasonCodes = new HashMap<>();
+    private final Map<String, FailureCause> reasonCodes = new HashMap<>();
 
     static {
         reasonCodes.put("BuyerCanceled", FailureCause.CANCEL);
@@ -22,8 +24,7 @@ public class ReasonCodeConverter {
         reasonCodes.put("ProcessingFailure", FailureCause.PAYMENT_PARTNER_ERROR);
     }
 
-    private ReasonCodeConverter() {
-    }
+
 
     /**
      * Convert the error code into a Payline FailureCause
@@ -31,7 +32,7 @@ public class ReasonCodeConverter {
      * @param errorCode the Amazon error code
      * @return the corresponding FailureCause or PARTNER_UNKNOWN_ERROR
      */
-    public static FailureCause convert(String errorCode) {
+    public FailureCause convert(String errorCode) {
         FailureCause cause = reasonCodes.get(errorCode);
         if (cause == null) {
             cause = FailureCause.PARTNER_UNKNOWN_ERROR;

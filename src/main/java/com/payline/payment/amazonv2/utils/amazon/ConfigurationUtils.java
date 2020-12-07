@@ -9,11 +9,11 @@ import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.payment.amazonv2.utils.JsonService;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.amazonv2.utils.constant.PartnerConfigurationKeys;
-import com.payline.pmapi.logger.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
+@Log4j2
 public class ConfigurationUtils {
-    private static final Logger LOGGER = LogManager.getLogger(ConfigurationUtils.class);
+
 
     protected PayConfiguration payConfiguration;
     protected final JsonService jsonService = JsonService.getInstance();
@@ -30,7 +30,7 @@ public class ConfigurationUtils {
                     .setEnvironment(configuration.getEnvironment().isSandbox() ? Environment.SANDBOX : Environment.LIVE);
         } catch (AmazonPayClientException e) {
             String errorMessage = "unable to init Amazon configuration";
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
             throw new PluginException(errorMessage, e);
         }
     }

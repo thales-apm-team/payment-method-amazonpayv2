@@ -7,6 +7,7 @@ import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
 import com.payline.payment.amazonv2.exception.PluginException;
+import com.payline.payment.amazonv2.service.RequestConfigurationService;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.amazon.ReasonCodeConverter;
@@ -23,15 +24,15 @@ import com.payline.pmapi.bean.payment.response.buyerpaymentidentifier.impl.Empty
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFailure;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseFormUpdated;
 import com.payline.pmapi.bean.payment.response.impl.PaymentResponseSuccess;
-import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.PaymentWithRedirectionService;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Log4j2
 public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirectionService {
-    private static final Logger LOGGER = LogManager.getLogger(PaymentWithRedirectionServiceImpl.class);
+
 
     private ClientUtils client = ClientUtils.getInstance();
     FormUtils formUtils = FormUtils.getInstance();
@@ -48,20 +49,20 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
                 response = step2(request);
             } else {
                 String errorMessage = "Unknown step " + step;
-                LOGGER.error(errorMessage);
+                log.error(errorMessage);
                 response = PaymentResponseFailure.PaymentResponseFailureBuilder.aPaymentResponseFailure()
                         .withErrorCode(errorMessage)
                         .withFailureCause(FailureCause.INVALID_DATA)
                         .build();
             }
         } catch (PluginException e) {
-            LOGGER.info("unable to execute PaymentWithRedirectionServiceImpl#finalizeRedirectionPayment", e);
+            log.info("unable to execute PaymentWithRedirectionServiceImpl#finalizeRedirectionPayment", e);
             response = e.toPaymentResponseFailureBuilder().build();
         } catch (RuntimeException e) {
-            LOGGER.error("Unexpected plugin error", e);
+            log.error("Unexpected plugin error", e);
             response = PaymentResponseFailure.PaymentResponseFailureBuilder
                     .aPaymentResponseFailure()
-                    .withErrorCode(PluginException.runtimeErrorCode(e))
+                    .withErrorCode(PluginUtils.runtimeErrorCode(e))
                     .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }
         return response;
@@ -74,7 +75,7 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
         // verify if it's a payment or a refund partnerTransactionId
         String transactionId = request.getTransactionId();
 
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
         client.init(configuration);
 
         if (transactionId.startsWith("S")) {
@@ -92,7 +93,7 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
     }
 
     private PaymentResponse step1(RedirectionPaymentRequest request) {
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
 
         // get the checkoutSessionId
         String amazonCheckoutSessionId = "AmazonCheckoutSessionId";
@@ -119,7 +120,7 @@ public class PaymentWithRedirectionServiceImpl implements PaymentWithRedirection
     }
 
     private PaymentResponse step2(RedirectionPaymentRequest request) {
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
 
         // get the checkoutSessionId
         String checkoutSessionId = request.getRequestContext().getRequestData().get(RequestContextKeys.CHECKOUT_SESSION_ID);

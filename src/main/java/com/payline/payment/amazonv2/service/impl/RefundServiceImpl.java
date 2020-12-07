@@ -5,6 +5,7 @@ import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.bean.nested.StatusDetails;
 import com.payline.payment.amazonv2.exception.PluginException;
+import com.payline.payment.amazonv2.service.RequestConfigurationService;
 import com.payline.payment.amazonv2.utils.PluginUtils;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.amazon.ReasonCodeConverter;
@@ -13,18 +14,17 @@ import com.payline.pmapi.bean.refund.request.RefundRequest;
 import com.payline.pmapi.bean.refund.response.RefundResponse;
 import com.payline.pmapi.bean.refund.response.impl.RefundResponseFailure;
 import com.payline.pmapi.bean.refund.response.impl.RefundResponseSuccess;
-import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.RefundService;
-import org.apache.logging.log4j.Logger;
-
+import lombok.extern.log4j.Log4j2;
+@Log4j2
 public class RefundServiceImpl implements RefundService {
-    private static final Logger LOGGER = LogManager.getLogger(RefundServiceImpl.class);
+
 
     private ClientUtils client = ClientUtils.getInstance();
 
     @Override
     public RefundResponse refundRequest(RefundRequest request) {
-        RequestConfiguration configuration = RequestConfiguration.build(request);
+        RequestConfiguration configuration = RequestConfigurationService.getInstance().build(request);
         RefundResponse response;
         String refundId = "UNKNOWN";
 
@@ -72,16 +72,16 @@ public class RefundServiceImpl implements RefundService {
             }
 
         }catch (PluginException e){
-            LOGGER.info("unable to execute RefundService#refundRequest", e);
+            log.info("unable to execute RefundService#refundRequest", e);
             response = e.toRefundResponseFailureBuilder()
                     .withPartnerTransactionId(refundId)
                     .build();
         }catch (RuntimeException e){
-            LOGGER.error("Unexpected plugin error", e);
+            log.error("Unexpected plugin error", e);
             response = RefundResponseFailure.RefundResponseFailureBuilder
                     .aRefundResponseFailure()
                     .withPartnerTransactionId(refundId)
-                    .withErrorCode(PluginException.runtimeErrorCode(e))
+                    .withErrorCode(PluginUtils.runtimeErrorCode(e))
                     .withFailureCause(FailureCause.INTERNAL_ERROR).build();
         }
 

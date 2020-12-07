@@ -15,17 +15,16 @@ import com.payline.pmapi.bean.paymentform.request.PaymentFormConfigurationReques
 import com.payline.pmapi.bean.paymentform.response.configuration.PaymentFormConfigurationResponse;
 import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseFailure;
 import com.payline.pmapi.bean.paymentform.response.configuration.impl.PaymentFormConfigurationResponseSpecific;
-import com.payline.pmapi.logger.LogManager;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Locale;
-
+@Log4j2
 public class PaymentFormConfigurationServiceImpl extends LogoPaymentFormConfigurationService {
     public static final String FAILURE_TRANSACTION_ID = "NO TRANSACTION YET";
 
-    private static final Logger LOGGER = LogManager.getLogger(PaymentFormConfigurationServiceImpl.class);
+
     private final JsonService jsonService = JsonService.getInstance();
     private FormUtils formUtils = FormUtils.getInstance();
 
@@ -72,7 +71,7 @@ public class PaymentFormConfigurationServiceImpl extends LogoPaymentFormConfigur
 
         } catch (MalformedURLException e) {
             String errorMessage = "Unable convert Amazon script url into an URL object";
-            LOGGER.error(errorMessage, e);
+            log.error(errorMessage, e);
 
             pfcResponse = PaymentFormConfigurationResponseFailure.PaymentFormConfigurationResponseFailureBuilder
                     .aPaymentFormConfigurationResponseFailure()
@@ -81,7 +80,7 @@ public class PaymentFormConfigurationServiceImpl extends LogoPaymentFormConfigur
                     .withFailureCause(FailureCause.INVALID_DATA)
                     .build();
         } catch (PluginException e) {
-            LOGGER.info("unable to execute PaymentFormConfigurationServiceImpl#getPaymentFormConfiguration", e);
+            log.info("unable to execute PaymentFormConfigurationServiceImpl#getPaymentFormConfiguration", e);
             pfcResponse = PaymentFormConfigurationResponseFailure.PaymentFormConfigurationResponseFailureBuilder
                     .aPaymentFormConfigurationResponseFailure()
                     .withPartnerTransactionId(FAILURE_TRANSACTION_ID)

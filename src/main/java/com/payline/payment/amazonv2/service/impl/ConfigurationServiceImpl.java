@@ -4,6 +4,7 @@ import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.ButtonColor;
 import com.payline.payment.amazonv2.bean.nested.ProductType;
 import com.payline.payment.amazonv2.exception.PluginException;
+import com.payline.payment.amazonv2.service.RequestConfigurationService;
 import com.payline.payment.amazonv2.utils.amazon.ClientUtils;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.amazonv2.utils.i18n.I18nService;
@@ -13,18 +14,17 @@ import com.payline.pmapi.bean.configuration.parameter.AbstractParameter;
 import com.payline.pmapi.bean.configuration.parameter.impl.InputParameter;
 import com.payline.pmapi.bean.configuration.parameter.impl.ListBoxParameter;
 import com.payline.pmapi.bean.configuration.request.ContractParametersCheckRequest;
-import com.payline.pmapi.logger.LogManager;
 import com.payline.pmapi.service.ConfigurationService;
-import org.apache.logging.log4j.Logger;
+import lombok.extern.log4j.Log4j2;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.payline.pmapi.bean.configuration.request.ContractParametersCheckRequest.GENERIC_ERROR;
-
+@Log4j2
 public class ConfigurationServiceImpl implements ConfigurationService {
-    private static final Logger LOGGER = LogManager.getLogger(ConfigurationServiceImpl.class);
+
 
     private ReleaseProperties releaseProperties = ReleaseProperties.getInstance();
     private final I18nService i18n = I18nService.getInstance();
@@ -77,7 +77,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
             // check required fields
             for (AbstractParameter param : this.getParameters(locale)) {
                 if (param.isRequired() && accountInfo.get(param.getKey()) == null) {
-                    LOGGER.info("contract param: {} is mandatory but missing", param.getKey());
+                    log.info("contract param: {} is mandatory but missing", param.getKey());
                     String message = i18n.getMessage(I18N_CONTRACT_PREFIX + param.getKey() + ".requiredError", locale);
                     errors.put(param.getKey(), message);
                 }
@@ -85,7 +85,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
             if (errors.size() == 0) {
                 // call for a getCheckoutSession with a bad checkoutSession id
-                RequestConfiguration configuration = RequestConfiguration.build(contractParametersCheckRequest);
+                RequestConfiguration configuration = RequestConfigurationService.getInstance().build(contractParametersCheckRequest);
                 clientUtils.init(configuration);
                 if (!clientUtils.isPublicKeyIdOk()) {
                     errors.put(ContractConfigurationKeys.PUBLIC_KEY_ID, i18n.getMessage(I18N_CONTRACT_PREFIX + ContractConfigurationKeys.PUBLIC_KEY_ID + ".invalid", locale));
@@ -93,10 +93,10 @@ public class ConfigurationServiceImpl implements ConfigurationService {
             }
 
         } catch (PluginException e) {
-            LOGGER.info("unable to execute PaymentService#paymentRequest", e);
+            log.info("unable to execute PaymentService#paymentRequest", e);
             errors.put(GENERIC_ERROR, e.getMessage());
         } catch (RuntimeException e) {
-            LOGGER.error("Unexpected plugin error", e);
+            log.error("Unexpected plugin error", e);
             errors.put(GENERIC_ERROR, e.getMessage());
 
         }
