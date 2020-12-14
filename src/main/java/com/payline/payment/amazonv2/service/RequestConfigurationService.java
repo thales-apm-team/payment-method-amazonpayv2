@@ -23,11 +23,11 @@ public class RequestConfigurationService {
     }
 
     private static class Holder {
-        private static final RequestConfigurationService instance = new RequestConfigurationService();
+        private static final RequestConfigurationService INSTANCE = new RequestConfigurationService();
     }
 
     public static RequestConfigurationService getInstance() {
-        return RequestConfigurationService.Holder.instance;
+        return RequestConfigurationService.Holder.INSTANCE;
     }
     // --- Singleton Holder pattern + initialization END
 

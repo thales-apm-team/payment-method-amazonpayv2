@@ -12,25 +12,25 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class CheckoutSession extends AmazonBean {
-    private String checkoutSessionId;
-    private ChargePermissionType chargePermissionType;
-    private RecurringMetaData recurringMetaData;
-    private WebCheckoutDetails webCheckoutDetails;
-    private String productType;
-    private PaymentDetails paymentDetails;
-    private MerchantMetadata merchantMetadata;
-    private String platformId;
-    private ProviderMetadata providerMetadata;
-    private Buyer buyer;
-    private Address shippingAddress;
-    private Address billingAddress;
-    private List<PaymentPreference> paymentPreferences;
-    private StatusDetails statusDetails;
-    private List<Constraint> constraints;
-    private Date expirationTimestamp;
-    private String chargePermissionId;
-    private String chargeId;
-    private String storeId;
-    private DeliverySpecifications deliverySpecifications;
+    String checkoutSessionId;
+    ChargePermissionType chargePermissionType;
+    RecurringMetaData recurringMetaData;
+    WebCheckoutDetails webCheckoutDetails;
+    String productType;
+    PaymentDetails paymentDetails;
+    MerchantMetadata merchantMetadata;
+    String platformId;
+    ProviderMetadata providerMetadata;
+    Buyer buyer;
+    Address shippingAddress;
+    Address billingAddress;
+    List<PaymentPreference> paymentPreferences;
+    StatusDetails statusDetails;
+    List<Constraint> constraints;
+    Date expirationTimestamp;
+    String chargePermissionId;
+    String chargeId;
+    String storeId;
+    DeliverySpecifications deliverySpecifications;
 
 }

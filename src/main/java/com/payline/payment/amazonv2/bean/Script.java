@@ -13,16 +13,16 @@ import lombok.Value;
 public class Script {
 
     @NonNull
-    private final String merchantId;
+    String merchantId;
     @NonNull
-    private final String ledgerCurrency;
-    private final boolean sandbox;
-    private final String checkoutLanguage;
-    private final ProductType productType;    // default is PayAndShip
+    String ledgerCurrency;
+    boolean sandbox;
+    String checkoutLanguage;
+    ProductType productType;    // default is PayAndShip
     @NonNull
-    private final Placement placement;
-    private final ButtonColor buttonColor;    // default is Gold
+    Placement placement;
+    ButtonColor buttonColor;    // default is Gold
     @NonNull
-    private final CreateCheckoutSessionConfig createCheckoutSessionConfig;
+    CreateCheckoutSessionConfig createCheckoutSessionConfig;
 
 }

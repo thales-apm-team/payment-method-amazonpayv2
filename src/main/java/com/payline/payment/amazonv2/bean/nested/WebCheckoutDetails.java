@@ -6,7 +6,7 @@ import lombok.Value;
 @Builder
 @Value
 public class WebCheckoutDetails {
-    private String checkoutReviewReturnUrl;
-    private String checkoutResultReturnUrl;
-    private String amazonPayRedirectUrl;
+    String checkoutReviewReturnUrl;
+    String checkoutResultReturnUrl;
+    String amazonPayRedirectUrl;
 }

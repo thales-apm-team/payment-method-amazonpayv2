@@ -11,11 +11,11 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 public class Refund extends AmazonBean {
-    private String refundId;
-    private String chargeId;
-    private Price refundAmount;
-    private String softDescriptor;
-    private StatusDetails statusDetails;
+    String refundId;
+    String chargeId;
+    Price refundAmount;
+    String softDescriptor;
+    StatusDetails statusDetails;
 
 
 }
