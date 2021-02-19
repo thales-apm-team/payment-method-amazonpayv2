@@ -5,6 +5,8 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class RequestContextKeys {
     public final String CHECKOUT_SESSION_ID = "checkoutSessionId";
+    public final String CHARGE_ID = "chargeId";
+
     public final String STEP = "step";
     public final String EMAIL = "email";
 

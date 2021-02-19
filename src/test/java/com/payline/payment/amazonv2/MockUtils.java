@@ -1,10 +1,13 @@
 package com.payline.payment.amazonv2;
 
+import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.nested.ButtonColor;
 import com.payline.payment.amazonv2.bean.nested.Placement;
 import com.payline.payment.amazonv2.bean.nested.ProductType;
+import com.payline.payment.amazonv2.utils.JsonService;
 import com.payline.payment.amazonv2.utils.constant.ContractConfigurationKeys;
 import com.payline.payment.amazonv2.utils.constant.PartnerConfigurationKeys;
+import com.payline.payment.amazonv2.utils.constant.RequestContextKeys;
 import com.payline.pmapi.bean.common.Buyer;
 import com.payline.pmapi.bean.configuration.PartnerConfiguration;
 import com.payline.pmapi.bean.configuration.request.ContractParametersCheckRequest;
@@ -25,6 +28,8 @@ import java.util.*;
 public class MockUtils {
     private final String TRANSACTIONID = "123456789012345678901";
     private final String PARTNER_TRANSACTIONID = "098765432109876543210";
+    private final String CHECKOUT_SESSION_ID = "123456";
+    private final String CHARGE_ID = "123456";
 
 
     /**
@@ -290,4 +295,206 @@ public class MockUtils {
         return new ContractConfiguration("AmazonPayV2", contractProperties);
     }
 
+    public static Charge aCaptureResponse_Captured(){
+        String jsonResponse = "{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"statusDetails\":{\n" +
+                "         \"state\": \"Captured\",\n" +
+                "         \"reasonCode\": null,\n" +
+                "         \"reasonDescription\": null,\n" +
+                "         \"lastUpdatedTimestamp\": \"20190714T155300Z\"\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n";
+
+        return JsonService.getInstance().fromJson(jsonResponse, Charge.class);
+    }
+
+    public static Charge aCaptureResponse_CaptureInitiated(){
+        String jsonResponse = "{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"statusDetails\":{\n" +
+                "         \"state\": \"CaptureInitiated\",\n" +
+                "         \"reasonCode\": null,\n" +
+                "         \"reasonDescription\": null,\n" +
+                "         \"lastUpdatedTimestamp\": \"20190714T155300Z\"\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n";
+
+        return JsonService.getInstance().fromJson(jsonResponse, Charge.class);
+    }
+
+    public static Charge aCaptureResponse_Declined(){
+        String jsonResponse = "{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"statusDetails\":{\n" +
+                "         \"state\": \"Declined\",\n" +
+                "         \"reasonCode\": null,\n" +
+                "         \"reasonDescription\": null,\n" +
+                "         \"lastUpdatedTimestamp\": \"20190714T155300Z\"\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n";
+
+        return JsonService.getInstance().fromJson(jsonResponse, Charge.class);
+    }
+
+    public static Charge aCaptureResponse_Empty_State(){
+        String jsonResponse = "{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"statusDetails\":{\n" +
+                "         \"state\": \"\",\n" +
+                "         \"reasonCode\": null,\n" +
+                "         \"reasonDescription\": null,\n" +
+                "         \"lastUpdatedTimestamp\": \"20190714T155300Z\"\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n";
+
+        return JsonService.getInstance().fromJson(jsonResponse, Charge.class);
+    }
+
+    public static Charge aCaptureResponse_Without_StatusDetails(){
+        String jsonResponse = "{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n";
+
+        return JsonService.getInstance().fromJson(jsonResponse, Charge.class);
+    }
+
+    public RequestContext aRequestContext_With_ChargeId() {
+        Map<String, String> requestData = new HashMap<>();
+        requestData.putIfAbsent(RequestContextKeys.CHARGE_ID, CHARGE_ID);
+
+         return RequestContext.RequestContextBuilder
+                .aRequestContext()
+                .withRequestData(requestData)
+                .build();
+    }
+    public RequestContext aRequestContext_Without_ChargeId() {
+        Map<String, String> requestData = new HashMap<>();
+        requestData.putIfAbsent(RequestContextKeys.CHECKOUT_SESSION_ID, CHECKOUT_SESSION_ID);
+
+         return RequestContext.RequestContextBuilder
+                .aRequestContext()
+                .withRequestData(requestData)
+                .build();
+    }
 }

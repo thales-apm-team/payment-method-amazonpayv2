@@ -5,10 +5,12 @@ import com.amazon.pay.api.WebstoreClient;
 import com.amazon.pay.api.exceptions.AmazonPayClientException;
 import com.payline.payment.amazonv2.MockUtils;
 import com.payline.payment.amazonv2.bean.AmazonBean;
+import com.payline.payment.amazonv2.bean.Charge;
 import com.payline.payment.amazonv2.bean.CheckoutSession;
 import com.payline.payment.amazonv2.bean.Refund;
 import com.payline.payment.amazonv2.bean.configuration.RequestConfiguration;
 import com.payline.payment.amazonv2.bean.nested.PaymentDetails;
+import com.payline.payment.amazonv2.bean.nested.Price;
 import com.payline.payment.amazonv2.exception.PluginException;
 import com.payline.pmapi.bean.common.FailureCause;
 import org.junit.jupiter.api.Assertions;
@@ -242,5 +244,87 @@ class ClientUtilsTest {
         PluginException e = Assertions.assertThrows(PluginException.class, () -> client.checkResponse(response));
         Assertions.assertEquals("The value provided for [Parameter] is invalid.", e.getErrorCode());
         Assertions.assertEquals(FailureCause.PARTNER_UNKNOWN_ERROR, e.getFailureCause());
+    }
+
+    @Test
+    void captureChargeNominal() throws Exception {
+        AmazonPayResponse response = new AmazonPayResponse();
+        response.setStatus(200);
+        response.setRawResponse("{\n" +
+                "     \"chargeId\": \"P21-1111111-1111111-C111111\",\n" +
+                "     \"chargePermissionId\": \"P21-1111111-1111111\",\n" +
+                "     \"chargeAmount\":{\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"captureAmount\": {\n" +
+                "         \"amount\": \"14.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"refundedAmount\": {\n" +
+                "         \"amount\": \"0.00\",\n" +
+                "         \"currencyCode\": \"USD\"\n" +
+                "     },\n" +
+                "     \"convertedAmount\": \"14.00\",\n" +
+                "     \"conversionRate\": \"1.00\",\n" +
+                "     \"softDescriptor\": \"Descriptor\",\n" +
+                "     \"merchantMetadata\": null,\n" +
+                "     \"providerMetadata\": {\n" +
+                "         \"providerReferenceId\": null\n" +
+                "     },\n" +
+                "     \"statusDetails\":{\n" +
+                "         \"state\": \"Captured\",\n" +
+                "         \"reasonCode\": null,\n" +
+                "         \"reasonDescription\": null,\n" +
+                "         \"lastUpdatedTimestamp\": \"20190714T155300Z\"\n" +
+                "     },\n" +
+                "     \"creationTimestamp\": \"20190714T155300Z\",\n" +
+                "     \"expirationTimestamp\": \"20190715T155300Z\",\n" +
+                "     \"releaseEnvironment\": \"Sandbox\"\n" +
+                "}\n" +
+                "\n");
+
+        Mockito.doReturn(response).when(webstoreClient).captureCharge(anyString(), any());
+
+        String chargeId = "P21-1111111-1111111-C111111";
+
+        Price price = Price.builder()
+                .amount(MockUtils.aPaylineAmount().getAmountInSmallestUnit().toString())
+                .currencyCode(MockUtils.aPaylineAmount().getCurrency().getCurrencyCode())
+                .build();
+
+        PaymentDetails paymentDetails = PaymentDetails.builder()
+                .chargeAmount(price)
+                .softDescriptor("descriptor")
+                .build();
+
+        Charge captureCharge = client.captureCharge(chargeId,paymentDetails);
+
+        String expectedChargePermissionId = "P21-1111111-1111111";
+        String expectedReleaseEnvironment = "Sandbox";
+
+        Assertions.assertEquals(chargeId, captureCharge.getChargeId());
+        Assertions.assertEquals(expectedChargePermissionId, captureCharge.getChargePermissionId());
+        Assertions.assertEquals(expectedReleaseEnvironment, captureCharge.getReleaseEnvironment().toString());
+
+    }
+
+    @Test
+    void captureChargeException() throws Exception {
+        Mockito.doThrow(new AmazonPayClientException("foo")).when(webstoreClient).captureCharge(anyString(), any());
+        String chargeId = "P21-1111111-1111111-C111111";
+
+        Price price = Price.builder()
+                .amount(MockUtils.aPaylineAmount().getAmountInSmallestUnit().toString())
+                .currencyCode(MockUtils.aPaylineAmount().getCurrency().getCurrencyCode())
+                .build();
+
+        PaymentDetails paymentDetails = PaymentDetails.builder()
+                .chargeAmount(price)
+                .softDescriptor("descriptor")
+                .build();
+
+        PluginException e = Assertions.assertThrows(PluginException.class, () -> client.captureCharge(chargeId, paymentDetails));
+        Assertions.assertEquals("unable to call for a captureCharge", e.getErrorCode());
     }
 }
